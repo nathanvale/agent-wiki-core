@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./consumer-guard": "./src/consumer-guard/index.ts"
+  },
   "packageManager": "bun@1.4.4",
   "scripts": {
     "start": "bun run src/cli.ts",
