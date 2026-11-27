@@ -12,6 +12,11 @@ Check command: bun run check
 Smoke: bun run start --help
 Source packet: https://github.com/nathanvale/agent-wiki-core
 
+## Words
+
+Before naming a file, folder, symbol, route or cause, read `GLOSSARY.md` for the word and `GLOSSARY-MAP.md`, "Names in code", for how it is spelled in code.
+A new domain word goes into `GLOSSARY.md` in the same pull request that first uses it.
+
 ## Comments
 
 Lint refuses a comment in code, so say it in a name, a type or a test title.
