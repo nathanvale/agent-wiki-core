@@ -1,6 +1,6 @@
 ---
 name: wiki
-description: Work in a consumer wiki through its command-line tool. Use when reading, changing, filing, or checking notes in a wiki.
+description: Work in a consumer wiki through its command-line tool. Use when creating, importing, moving, reading, changing, filing, or checking notes or records.
 ---
 
 # Wiki
