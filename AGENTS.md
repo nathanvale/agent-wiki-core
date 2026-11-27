@@ -10,7 +10,7 @@ Keep domain implementation in separate files and preserve one public application
 
 Check command: bun run check
 Smoke: bun run start --help
-Source packet: https://github.com/nathanvale/wiki-core
+Source packet: https://github.com/nathanvale/agent-wiki-core
 
 ## Comments
 

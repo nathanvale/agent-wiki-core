@@ -1,5 +1,5 @@
 {
-  "name": "wiki-core",
+  "name": "agent-wiki-core",
   "version": "0.0.0",
   "private": true,
   "type": "module",

@@ -20,7 +20,7 @@ const noEffects = {
 const succeeded = "SUCCESS_UNCHANGED" satisfies keyof typeof commonCauses;
 
 const status = command({
-  identity: "wiki-core.status",
+  identity: "agent-wiki-core.status",
   route: ["status"],
   summary: "Report that this command-line tool runs.",
   input: noInput,
@@ -28,7 +28,7 @@ const status = command({
   run: (_input, context) =>
     context.result(
       {
-        commandIdentity: "wiki-core.status",
+        commandIdentity: "agent-wiki-core.status",
         causeCode: succeeded,
       },
       {
