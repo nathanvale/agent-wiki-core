@@ -6,6 +6,7 @@
       "name": "kernel-trial",
       "dependencies": {
         "agent-cli-kernel": "github:nathanvale/agent-cli-kernel#64e0faa68197d701c36444dc10335408684e6514",
+        "rumdl": "0.3.5",
       },
       "devDependencies": {
         "@biomejs/biome": "2.6.7",
@@ -14,6 +15,7 @@
         "@eslint/js": "10.0.1",
         "@types/bun": "1.4.4",
         "@typescript/native": "npm:typescript@7.1.0-beta",
+        "agent-gates": "github:nathanvale/agent-gates#bdf422887766d6b277ddf81c76074236c22ca8c4",
         "eslint": "10.15.0",
         "fallow": "3.43.2",
         "fallow-type-aware": "3.43.2",
@@ -148,6 +150,20 @@
 
     "@pnpm/deps.graph-sequencer": ["@pnpm/deps.graph-sequencer@1100.0.1", "", {}, "sha512-pOr5+q1fLYKwFN3LAJuGZEnfXDcQ73zqgDHMtGy+K+uIoUqyY+6MeDCWFwfu+4EFuq76I5EPFofoNAI+Bmmq4A=="],
 
+    "@rumdl/cli-darwin-arm64": ["@rumdl/cli-darwin-arm64@0.3.5", "", { "os": "darwin", "cpu": "arm64" }, "sha512-nkPC9Jz3QRi6taXY8JpMMUAPAmy8zXqtUZtnWM1xLXn6ZiGkOpJN1fxIz6BOwe1DGO6OZIPqG8g60ETgDSuf3w=="],
+
+    "@rumdl/cli-darwin-x64": ["@rumdl/cli-darwin-x64@0.3.5", "", { "os": "darwin", "cpu": "x64" }, "sha512-XgIHFk9c501NOy+hO5Vh4WeUfbQrbbc33KpBZ5rQVC4t8t9MxLk6LzxCkinHsW/JpurrrHPJJwEJuAS0H8OXWA=="],
+
+    "@rumdl/cli-linux-arm64": ["@rumdl/cli-linux-arm64@0.3.5", "", { "os": "linux", "cpu": "arm64", "libc": "glibc" }, "sha512-vSnCfc2E5575VNnGFSo7LnLMC5/Dv7lP3KKI08kjv/cl6fPLf/xisSgGzcI+cTt4NJSxdpdYabO9TqHp+TvgBg=="],
+
+    "@rumdl/cli-linux-arm64-musl": ["@rumdl/cli-linux-arm64-musl@0.3.5", "", { "os": "linux", "cpu": "arm64", "libc": "musl" }, "sha512-u5ILFRIPYsKQOu/6UzqnaLoIGgFbriLTO60tU0y/RsFFRDn3Y6QtDMv7ZCPYKd/xl4i93+aj9dNxCKl429vIYw=="],
+
+    "@rumdl/cli-linux-x64": ["@rumdl/cli-linux-x64@0.3.5", "", { "os": "linux", "cpu": "x64", "libc": "glibc" }, "sha512-1FbYJy7Z46wkZ+AX8gLux+Ra2MRfJ3gPg1Glaotn7e6ZXxqNWm8LHzBstbGMn7rakMTmx5ysHtBpYto/pR5jLA=="],
+
+    "@rumdl/cli-linux-x64-musl": ["@rumdl/cli-linux-x64-musl@0.3.5", "", { "os": "linux", "cpu": "x64", "libc": "musl" }, "sha512-uBL8NZlHYmZJAykES+hsjaBCmfCr+kyWL8yZfgLO5JvwV9/cDK+5yr/6bL9fsu92ypquzGRQoO6ClfhKS0Hxjw=="],
+
+    "@rumdl/cli-win32-x64": ["@rumdl/cli-win32-x64@0.3.5", "", { "os": "win32", "cpu": "x64" }, "sha512-wAdF7Ex4CsoCQW3A2+9AirCfuUfvK8BxZ3pPQKrFi3hOh2xiEw0kNeiEBt9YGH5YTgen2uKufI3k8/CFZHS9Xg=="],
+
     "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],
 
     "@types/esrecurse": ["@types/esrecurse@4.3.1", "", {}, "sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw=="],
@@ -229,6 +245,8 @@
     "acorn-jsx": ["acorn-jsx@5.3.2", "", { "peerDependencies": { "acorn": "^6.0.0 || ^7.0.0 || ^8.0.0" } }, "sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ=="],
 
     "agent-cli-kernel": ["agent-cli-kernel@github:nathanvale/agent-cli-kernel#64e0faa", { "dependencies": { "@logtape/logtape": "2.4.2", "@logtape/redaction": "2.4.2" }, "peerDependencies": { "@eslint/js": "10.0.1", "typescript-eslint": "8.73.0" }, "optionalPeers": ["@eslint/js", "typescript-eslint"] }, "nathanvale-agent-cli-kernel-64e0faa", "sha512-UtfFQSYRE0HZ2u0kdSPRH9YpczIEzK7sZEngaTxvpGUtkGMEW8kgbbP0lfp1GRsA8Kwb6EwpFnehZYFfM611+Q=="],
+
+    "agent-gates": ["agent-gates@github:nathanvale/agent-gates#bdf4228", { "dependencies": { "agent-cli-kernel": "github:nathanvale/agent-cli-kernel#426e5dbdb09fada8950f3aaea3b5204f1da40907" }, "bin": { "agent-gates": "./src/cli.ts" } }, "nathanvale-agent-gates-bdf4228", "sha512-S/BchsdPotgXV8gMzjgNkn7+lwYXm/xyiB0V3ErvUy7RflaWfWUg5sNGz6xbnythcgDqNSE6Nz6lWBod8BQp1Q=="],
 
     "ajv": ["ajv@6.15.0", "", { "dependencies": { "fast-deep-equal": "^3.1.1", "fast-json-stable-stringify": "^2.0.0", "json-schema-traverse": "^0.4.1", "uri-js": "^4.2.2" } }, "sha512-fgFx7Hfoq60ytK2c7DhnF8jIvzYgOMxfugjLOSMHjLIPgenqa7S7oaagATUq99mV6IYvN2tRmC0wnTYX6iPbMw=="],
 
@@ -358,6 +376,8 @@
 
     "qified": ["qified@0.10.1", "", { "dependencies": { "hookified": "^2.1.1" } }, "sha512-+Owyggi9IxT1ePKGafcI87ubSmxol6smwJ+RAHDQlx9+9cPwFWDiKFFCPuWhr9ignlGpZ9vDQLw67N4dcTVFEA=="],
 
+    "rumdl": ["rumdl@0.3.5", "", { "optionalDependencies": { "@rumdl/cli-darwin-arm64": "0.3.5", "@rumdl/cli-darwin-x64": "0.3.5", "@rumdl/cli-linux-arm64": "0.3.5", "@rumdl/cli-linux-arm64-musl": "0.3.5", "@rumdl/cli-linux-x64": "0.3.5", "@rumdl/cli-linux-x64-musl": "0.3.5", "@rumdl/cli-win32-x64": "0.3.5" }, "bin": { "rumdl": "bin/rumdl" } }, "sha512-WQy4YWfL/SitZqvTd1SBh7tMfF2dhRJpaFH2b7uNH6oEpq7zl56kjQPi0bWYaL893wHc1NQ2soPGDgSCfsYPcA=="],
+
     "semver": ["semver@7.8.6", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-9lpSSU4Mly3mrtruwLs1eLK6+gzbzqeBFwRNjIjE+9LuDpWdYctrQlQ3ej1Ilgi7gknpsTRnPoLP8DpCHqHIJw=="],
 
     "shebang-command": ["shebang-command@2.0.0", "", { "dependencies": { "shebang-regex": "^3.0.0" } }, "sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA=="],
@@ -395,6 +415,8 @@
     "@eslint-community/eslint-utils/eslint-visitor-keys": ["eslint-visitor-keys@3.4.3", "", {}, "sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag=="],
 
     "@typescript-eslint/eslint-plugin/ignore": ["ignore@7.0.17", "", {}, "sha512-0c3zcBRlWmcKhcIQWckzkYncJRv5HHB8O32wO/FcWL8DDXWDJgiEF6SX9ThbTv5h/eZ+xJK+VvDjjQ+cQJhp3Q=="],
+
+    "agent-gates/agent-cli-kernel": ["agent-cli-kernel@github:nathanvale/agent-cli-kernel#426e5db", { "dependencies": { "@logtape/logtape": "2.4.2", "@logtape/redaction": "2.4.2" }, "peerDependencies": { "@eslint/js": "10.0.1", "typescript-eslint": "8.73.0" }, "optionalPeers": ["@eslint/js", "typescript-eslint"] }, "nathanvale-agent-cli-kernel-426e5db", "sha512-KjDh/Dp66jr5HtcNXXNlScNByeswCOR4O0K1XL3cpiU8406NMsSmM/oXikt08OoYkORs30lNJES/2cZXMZdliQ=="],
 
     "fallow-type-aware/typescript": ["typescript@7.0.2", "", { "optionalDependencies": { "@typescript/typescript-aix-ppc64": "7.0.2", "@typescript/typescript-darwin-arm64": "7.0.2", "@typescript/typescript-darwin-x64": "7.0.2", "@typescript/typescript-freebsd-arm64": "7.0.2", "@typescript/typescript-freebsd-x64": "7.0.2", "@typescript/typescript-linux-arm": "7.0.2", "@typescript/typescript-linux-arm64": "7.0.2", "@typescript/typescript-linux-loong64": "7.0.2", "@typescript/typescript-linux-mips64el": "7.0.2", "@typescript/typescript-linux-ppc64": "7.0.2", "@typescript/typescript-linux-riscv64": "7.0.2", "@typescript/typescript-linux-s390x": "7.0.2", "@typescript/typescript-linux-x64": "7.0.2", "@typescript/typescript-netbsd-arm64": "7.0.2", "@typescript/typescript-netbsd-x64": "7.0.2", "@typescript/typescript-openbsd-arm64": "7.0.2", "@typescript/typescript-openbsd-x64": "7.0.2", "@typescript/typescript-sunos-x64": "7.0.2", "@typescript/typescript-win32-arm64": "7.0.2", "@typescript/typescript-win32-x64": "7.0.2" }, "bin": { "tsc": "bin/tsc" } }, "sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA=="],
 

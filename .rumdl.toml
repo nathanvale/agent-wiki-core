@@ -1,0 +1,5 @@
+extends = "node_modules/agent-gates/config/rumdl-notes.toml"
+
+[global]
+include = ["wiki/**/*.md", "templates/**/*.md"]
+exclude = ["wiki/inbox/**"]

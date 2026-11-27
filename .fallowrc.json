@@ -122,5 +122,6 @@
         "scripts/**"
       ]
     }
-  }
+  },
+  "ignoreDependencies": ["agent-gates"]
 }

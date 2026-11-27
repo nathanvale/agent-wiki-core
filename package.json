@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./consumer-guard": "./src/consumer-guard/index.ts",
+    "./note/*": "./src/note/*.ts",
     "./shared/*": "./src/shared/*.ts"
   },
   "packageManager": "bun@1.4.4",
@@ -25,7 +26,8 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "agent-cli-kernel": "github:nathanvale/agent-cli-kernel#64e0faa68197d701c36444dc10335408684e6514"
+    "agent-cli-kernel": "github:nathanvale/agent-cli-kernel#64e0faa68197d701c36444dc10335408684e6514",
+    "rumdl": "0.3.5"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
@@ -38,7 +40,8 @@
     "eslint": "10.15.0",
     "@eslint/js": "10.0.1",
     "typescript-eslint": "8.73.0",
-    "fallow-type-aware": "3.43.2"
+    "fallow-type-aware": "3.43.2",
+    "agent-gates": "github:nathanvale/agent-gates#bdf422887766d6b277ddf81c76074236c22ca8c4"
   },
   "overrides": {
     "@typescript/old@npm:typescript@^6": "npm:typescript@6.0.2"
