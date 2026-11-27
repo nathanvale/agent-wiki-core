@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./consumer-guard": "./src/consumer-guard/index.ts"
+    "./consumer-guard": "./src/consumer-guard/index.ts",
+    "./shared/*": "./src/shared/*.ts"
   },
   "packageManager": "bun@1.4.4",
   "scripts": {
