@@ -204,6 +204,19 @@ test("refuses a path that is not a wiki root with DOMAIN_PRECONDITION_UNMET", ()
   );
 });
 
+test("refuses a regular file passed to --wiki with DOMAIN_PRECONDITION_UNMET and a repair", () => {
+  const folder = wikiFixture({ "regular-file.md": "# Not a folder\n" });
+  const regularFile = join(folder, "regular-file.md");
+  const { exitCode, envelope } = runNoteCheck(["--wiki", regularFile]);
+  expect(exitCode).toBe(3);
+  expect(envelope.result.outcome).toBe("refused");
+  expect(envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+  expect(envelope.message).toBe(
+    "That path is not a wiki root: it has no wiki/ folder inside it.",
+  );
+  expect(envelope.result.repairAction).toContain("--wiki");
+});
+
 test("effective rumdl configuration from .rumdl.toml inherits the pinned agent-gates notes profile", () => {
   const effective = Bun.spawnSync(
     [

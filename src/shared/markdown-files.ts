@@ -12,6 +12,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
+import type { Stats } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import {
   asWritten,
@@ -88,16 +89,30 @@ export function canonicalWikiRoot(path: string): string {
   }
 }
 
+function statIfPresent(read: () => Stats | undefined): Stats | undefined {
+  try {
+    return read();
+  } catch (error) {
+    if (errorCode(error) === "ENOTDIR") return undefined;
+    throw error;
+  }
+}
+
 export function isWikiRoot(wikiRoot: string): boolean {
   return (
-    lstatSync(join(wikiRoot, "wiki"), {
-      throwIfNoEntry: false,
-    })?.isDirectory() ?? false
+    statIfPresent(() =>
+      lstatSync(join(wikiRoot, "wiki"), {
+        throwIfNoEntry: false,
+      }),
+    )?.isDirectory() ?? false
   );
 }
 
 export function isFile(path: string): boolean {
-  return lstatSync(path, { throwIfNoEntry: false })?.isFile() ?? false;
+  return (
+    statIfPresent(() => lstatSync(path, { throwIfNoEntry: false }))?.isFile() ??
+    false
+  );
 }
 
 export function hasLinkedTemplatesFolder(wikiRoot: string): boolean {
@@ -109,7 +124,7 @@ export function hasLinkedTemplatesFolder(wikiRoot: string): boolean {
 }
 
 export function isExecutableFile(path: string): boolean {
-  const info = statSync(path, { throwIfNoEntry: false });
+  const info = statIfPresent(() => statSync(path, { throwIfNoEntry: false }));
   if (info === undefined || !info.isFile()) return false;
   try {
     accessSync(path, constants.X_OK);
