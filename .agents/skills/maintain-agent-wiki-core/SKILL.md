@@ -9,7 +9,7 @@ Project-only maintainer skill. Keep it under `.agents/skills/` and linked from `
 
 ## 1. Public boundary before every push
 
-Run a public pattern search across the staged diff, commit messages, `.changeset/` entries, and pull request text before pushing.
+Run a public pattern search across the branch diff against `origin/main` (`git diff origin/main...HEAD`), commit messages, `.changeset/` entries, and pull request text before pushing.
 
 Search for private repository names, consumer wiki names, personal names, home-directory paths, employer names, and credentials.
 
@@ -17,11 +17,11 @@ Done when zero private matches remain outside dependency URLs.
 
 ## 2. Exposing a module to consumer wikis
 
-Expose a module to consumer wikis only through a `package.json` `exports` subpath entry.
+Expose a module to consumer wikis only through a `package.json` `exports` subpath entry, and keep internal modules unexported.
 
-Declare every exported subpath target as a dead-code entry point in `.fallowrc.json` `entry` so Fallow treats it as a root. Keep internal modules unexported.
+Leave `.fallowrc.json` unchanged: Fallow already treats every `package.json` `exports` target as a dead-code entry point, and duplicating it in `.fallowrc.json` `entry` raises `entry-pattern-redundant`.
 
-Done when every consumer-facing subpath in `package.json` `exports` points to a file listed in `.fallowrc.json` `entry` and `bun run check` exits 0.
+Done when every consumer-facing module is declared under `package.json` `exports` and `bun run check` exits 0 with no unused-export finding and no `entry-pattern-redundant` diagnostic.
 
 ## 3. Kernel Pin alignment
 
