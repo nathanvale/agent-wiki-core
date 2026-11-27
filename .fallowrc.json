@@ -1,0 +1,126 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  "ignorePatterns": [
+    "config/anti-slop-bindings.mjs",
+    "config/anti-slop-rules.mjs",
+    "config/anti-slop-type-rules.mjs",
+    "config/payload-rules.mjs",
+    "config/platform-rules.mjs",
+    "config/template-rules.mjs",
+    "scripts/check-recorded-health-sizes.ts",
+    "scripts/fallow-health-at-base-settings.ts"
+  ],
+  "entry": ["tests/cli.test.ts"],
+  "typeAware": {
+    "enabled": true,
+    "projects": ["tsconfig.json"],
+    "require": "complete"
+  },
+  "audit": {
+    "gate": "all",
+    "css": false,
+    "cssDeep": false,
+    "deadCodeBaseline": "fallow-dead-code-recorded-hits.json",
+    "dupesBaseline": "fallow-duplicates-recorded-hits.json",
+    "healthBaseline": "fallow-health-recorded-hits.json"
+  },
+  "health": {
+    "maxFileLines": 500
+  },
+  "rules": {
+    "boundary-violation": "error",
+    "circular-dependencies": "error",
+    "coverage-gaps": "off",
+    "css-broken-reference": "off",
+    "css-dead-surface": "off",
+    "css-duplicate-block": "off",
+    "css-selector-complexity": "off",
+    "css-token-drift": "off",
+    "dev-dependencies-in-production": "error",
+    "duplicate-prop-shape": "off",
+    "dynamic-segment-name-conflict": "off",
+    "empty-catalog-groups": "off",
+    "feature-flags": "off",
+    "invalid-client-export": "off",
+    "misplaced-directive": "off",
+    "mixed-client-server-barrel": "off",
+    "policy-violation": "off",
+    "private-type-leaks": "off",
+    "prop-drilling": "off",
+    "re-export-cycle": "error",
+    "require-suppression-reason": "error",
+    "route-collision": "off",
+    "security-client-server-leak": "off",
+    "security-sink": "off",
+    "stale-suppressions": "error",
+    "test-only-dependencies": "error",
+    "thin-wrapper": "off",
+    "type-only-dependencies": "off",
+    "unlisted-dependencies": "error",
+    "unprovided-injects": "off",
+    "unrendered-components": "off",
+    "unresolved-catalog-references": "off",
+    "unresolved-imports": "error",
+    "unused-catalog-entries": "off",
+    "unused-component-emits": "off",
+    "unused-component-inputs": "off",
+    "unused-component-outputs": "off",
+    "unused-component-props": "off",
+    "unused-dependencies": "error",
+    "unused-exports": "error",
+    "unused-files": "error",
+    "unused-load-data-keys": "off",
+    "unused-server-actions": "off",
+    "unused-store-members": "off",
+    "unused-svelte-events": "off",
+    "unused-types": "error",
+    "deprecated-exports-in-use": "off",
+    "unused-namespace-members": "off",
+    "absent-component-props": "off",
+    "constant-parameters": "off",
+    "unused-effect-layers": "off",
+    "unused-tagged-errors": "off",
+    "unproduced-catch-tags": "off",
+    "complexity-cyclomatic": "error",
+    "complexity-cognitive": "error",
+    "complexity-crap": "off",
+    "complexity-file-lines": "error",
+    "package-cycle": "off",
+    "weakened-tests": "off",
+    "added-suppression": "off",
+    "test-only-branch": "off",
+    "diverged-clone-sibling": "off",
+    "added-dependency": "off"
+  },
+  "boundaries": {
+    "zones": [
+      {
+        "name": "entry",
+        "patterns": ["src/cli.ts", "src/commands.ts", "src/commands/**"]
+      },
+      { "name": "rules", "patterns": ["src/**/rules.ts"] },
+      { "name": "shared", "patterns": ["src/shared/**"] },
+      { "name": "subject", "patterns": ["src/*/**"], "autoDiscover": ["src"] },
+      { "name": "flat", "patterns": ["src/**"] }
+    ],
+    "rules": [
+      {
+        "from": "entry",
+        "allow": ["entry", "rules", "shared", "subject", "flat"]
+      },
+      { "from": "flat", "allow": ["flat", "rules"] },
+      { "from": "rules", "allow": ["rules"] },
+      { "from": "shared", "allow": ["rules"] },
+      { "from": "subject", "allow": ["rules", "shared"] }
+    ],
+    "coverage": {
+      "requireAllFiles": true,
+      "allowUnmatched": [
+        "tests/**",
+        "config/**",
+        "eslint.config.mjs",
+        "scripts/**"
+      ]
+    }
+  }
+}

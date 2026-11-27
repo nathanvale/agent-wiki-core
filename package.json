@@ -1,0 +1,42 @@
+{
+  "name": "wiki-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.4",
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "check": "bun run check:bundles && bun run lint && bun run format:check && bun run typecheck && bun run test && bun run --silent quality:fallow",
+    "build:bundles": "bun scripts/build-bundles.ts",
+    "check:bundles": "bun scripts/build-bundles.ts --check",
+    "regenerate": "bun run build:bundles",
+    "check:changesets": "bun run --bun changeset status --since origin/main && bun scripts/check-gated-paths.ts",
+    "check:recorded-health-sizes": "bun scripts/check-recorded-health-sizes.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun scripts/test-run.ts",
+    "quality:fallow": "node_modules/.bin/fallow --format json --quiet --type-aware --type-aware-require complete --fail-on-issues --baseline-mode identity --baseline fallow-dead-code-recorded-hits.json --dupes-baseline fallow-duplicates-recorded-hits.json --health-baseline fallow-health-recorded-hits.json",
+    "quality:fallow:record-hits": "node_modules/.bin/fallow --format json --quiet --type-aware --type-aware-require complete --save-baseline fallow-dead-code-recorded-hits.json && node_modules/.bin/fallow dupes --format json --quiet --save-baseline fallow-duplicates-recorded-hits.json && node_modules/.bin/fallow health --report-only --format json --quiet --baseline-mode identity --save-baseline fallow-health-recorded-hits.json && biome format --write fallow-dead-code-recorded-hits.json fallow-duplicates-recorded-hits.json fallow-health-recorded-hits.json",
+    "lint": "eslint . --max-warnings 0",
+    "format:check": "biome format .",
+    "format": "biome format --write ."
+  },
+  "dependencies": {
+    "agent-cli-kernel": "github:nathanvale/agent-cli-kernel#64e0faa68197d701c36444dc10335408684e6514"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "@changesets/cli": "3.0.3",
+    "@changesets/read": "1.0.1",
+    "@types/bun": "1.4.4",
+    "fallow": "3.43.2",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "@typescript/native": "npm:typescript@7.1.0-beta",
+    "eslint": "10.15.0",
+    "@eslint/js": "10.0.1",
+    "typescript-eslint": "8.73.0",
+    "fallow-type-aware": "3.43.2"
+  },
+  "overrides": {
+    "@typescript/old@npm:typescript@^6": "npm:typescript@6.0.2"
+  }
+}
