@@ -55,10 +55,7 @@ test("the full wiki skill has exactly three numbered steps and names only note c
   expect(steps[1]).toContain("route");
   expect(steps[1]).toMatch(/stop and report.*missing route/i);
   expect(steps[2]).toContain("note check");
-  expect(namedRoutes(fullSkill.body)).toEqual([
-    "note check --wiki <wiki root>",
-    "note check",
-  ]);
+  expect(namedRoutes(fullSkill.body)).toEqual(["note check"]);
 });
 
 test("the shipped pointer matches the full wiki skill front matter and points in prose", () => {

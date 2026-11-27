@@ -2,4 +2,4 @@
 "agent-wiki-core": patch
 ---
 
-Name the `--wiki` option in the `wiki` skill's check step.
+The `wiki` skill's check step now says to check every new or changed note before filing.
