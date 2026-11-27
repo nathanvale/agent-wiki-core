@@ -1,8 +1,8 @@
-# `wiki-core`
+# `agent-wiki-core`
 
 A Bun command-line tool on the CLI kernel.
 
-Source packet: `https://github.com/nathanvale/wiki-core`
+Source packet: `https://github.com/nathanvale/agent-wiki-core`
 
 ```sh
 bun install --frozen-lockfile

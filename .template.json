@@ -1,6 +1,6 @@
 {
-  "name": "wiki-core",
+  "name": "agent-wiki-core",
   "templateRevision": "f9179270a3dbec99775b5f9ad3c5f9796f237e54",
   "templateDirty": false,
-  "sourcePacket": "https://github.com/nathanvale/wiki-core"
+  "sourcePacket": "https://github.com/nathanvale/agent-wiki-core"
 }

@@ -38,7 +38,7 @@ function plantedRoot(changesetPath: string, content: string): string {
   return root;
 }
 
-const packageName = "wiki-core";
+const packageName = "agent-wiki-core";
 const major = `---\n"${packageName}": major\n---\n\n`;
 const minor = `---\n"${packageName}": minor\n---\n\n`;
 

@@ -18,7 +18,7 @@ import { stateAddon } from "agent-cli-kernel/addons/state";
 import { commands } from "../src/commands.ts";
 import { testFolder } from "./support/test-folder.ts";
 
-const cli = "wiki-core";
+const cli = "agent-wiki-core";
 const identity = `${cli}.probe` as const;
 const notInteractiveCause = "DOMAIN_PROBE_NEEDS_TERMINAL" as const;
 const capabilityAddons = [
