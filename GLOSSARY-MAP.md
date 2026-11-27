@@ -32,7 +32,9 @@ this repository and stops defining the word itself.
 
 A file, folder, exported symbol, command route, cause code or test title that
 stands for a glossary term uses that term's words, in the term's order. A
-word on a term's `_Avoid_` line is never used for it.
+word on a term's `_Avoid_` line is never used to name that term, within the
+limits its note in parentheses gives; the same word stays free for another
+term that owns it, as `template` does in `FamilyTemplate`.
 
 | Term                | Folder or file                | Symbols, routes and causes                            |
 | ------------------- | ----------------------------- | ----------------------------------------------------- |

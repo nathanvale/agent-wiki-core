@@ -10,10 +10,11 @@ Each term below is the word to use, with what it means and the words to avoid.
 
 ## Language
 
-An `_Avoid_` line lists words not to use for its term. A note in parentheses
-says when: it covers the words before it, back to the previous note or
-semicolon. A word with no note after it is refused in every file, folder and
-symbol name.
+An `_Avoid_` line lists words not to use for its term. The ban is for that
+term only: `tag` is avoided for a core pin and is still the right word in base
+tag. A note in parentheses narrows the ban further: it covers the words before
+it, back to the previous note or semicolon. A word with no note after it is
+never used to name its term, in prose or in a file, folder or symbol name.
 
 ### The core and the wikis that use it
 
@@ -200,7 +201,8 @@ _Avoid_: custom rule, plugin rule, override
 
 **Note contract**:
 The one statement of which header fields a filed note carries: the base
-fields, plus the family fields of its record family. Family templates, check
+fields, plus, for a record, the family fields of its record family. A filed
+note with no family carries the base fields only. Family templates, check
 rules and the wiki skill's field text all come from it.
 _Avoid_: schema (unqualified), spec, front matter rules
 
