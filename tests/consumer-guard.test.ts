@@ -23,7 +23,7 @@ type ConsumerWikiOptions = {
   readonly packageJson?: string;
   readonly bunLock?: string | null;
   readonly bunTag?: string | null;
-  readonly fullSkill?: string | null;
+  readonly wikiSkill?: string | null;
   readonly shippedPointer?: string | null;
   readonly installedPointer?: string | null;
   readonly nestedKernel?: boolean;
@@ -101,11 +101,11 @@ function withConsumerWiki(
         options.bunTag ??
           `example-agent-wiki-core-${pinnedCommit.slice(0, 7)}\n`,
       );
-    if (options.fullSkill !== null)
+    if (options.wikiSkill !== null)
       writeFixtureFile(
         wikiRoot,
         "node_modules/agent-wiki-core/skills/wiki/SKILL.md",
-        options.fullSkill ?? "# Wiki skill\n",
+        options.wikiSkill ?? "# Wiki skill\n",
       );
     if (options.shippedPointer !== null)
       writeFixtureFile(
@@ -179,7 +179,7 @@ test("missing installed pointer returns an install finding with repair", () => {
 });
 
 test("missing full wiki skill returns an install finding with repair", () => {
-  withConsumerWiki({ fullSkill: null }, (wikiRoot) => {
+  withConsumerWiki({ wikiSkill: null }, (wikiRoot) => {
     const finding = expectSingleFinding(
       installFindings(wikiRoot),
       "wiki-skill-missing",

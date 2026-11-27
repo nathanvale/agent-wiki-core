@@ -11,7 +11,7 @@ const installedPointerPath = ".agents/skills/wiki/SKILL.md";
 const nestedKernelPath = `${installedCorePath}/node_modules/${kernelPackage}`;
 const fullCommitPattern = /#([0-9a-f]{40})$/;
 const resolvedCommitPattern = /#([0-9a-f]{7,40})$/;
-const installedTagCommitPattern = /([0-9a-f]{7,40})$/;
+const installedTagCommitPattern = /(?:^|-)([0-9a-f]{7,40})$/;
 
 export type InstallFindingKind =
   | "core-pin-missing"
@@ -58,6 +58,10 @@ function parseJsonc(text: string): unknown {
   }
 }
 
+function matchCommit(value: unknown, pattern: RegExp): string | undefined {
+  return typeof value === "string" ? pattern.exec(value)?.[1] : undefined;
+}
+
 function readCorePin(wikiRoot: string): CorePinRead {
   const manifestText = readRegularFile(wikiRoot, "package.json");
   if (manifestText === undefined) {
@@ -73,8 +77,7 @@ function readCorePin(wikiRoot: string): CorePinRead {
   }
   const manifest = parseJsonc(manifestText);
   const spec = ownValue(ownValue(manifest, "dependencies"), corePackage);
-  const commit =
-    typeof spec === "string" ? fullCommitPattern.exec(spec)?.[1] : undefined;
+  const commit = matchCommit(spec, fullCommitPattern);
   if (commit === undefined) {
     return {
       ok: false,
@@ -111,10 +114,7 @@ function lockfileFindings(
     ownValue(rootWorkspace, "dependencies"),
     corePackage,
   );
-  const declaredCommit =
-    typeof declaredSpec === "string"
-      ? fullCommitPattern.exec(declaredSpec)?.[1]
-      : undefined;
+  const declaredCommit = matchCommit(declaredSpec, fullCommitPattern);
   if (declaredCommit !== corePin) {
     return [
       {
@@ -130,10 +130,7 @@ function lockfileFindings(
   const resolvedSpec: unknown = Array.isArray(packageEntry)
     ? packageEntry[0]
     : undefined;
-  const resolvedCommit =
-    typeof resolvedSpec === "string"
-      ? resolvedCommitPattern.exec(resolvedSpec)?.[1]
-      : undefined;
+  const resolvedCommit = matchCommit(resolvedSpec, resolvedCommitPattern);
   if (resolvedCommit === undefined || !corePin.startsWith(resolvedCommit)) {
     return [
       {
@@ -152,10 +149,7 @@ function installedCoreFindings(
   corePin: string,
 ): readonly InstallFinding[] {
   const installedTag = readRegularFile(wikiRoot, installedCoreTagPath)?.trim();
-  const installedCommit =
-    installedTag === undefined
-      ? undefined
-      : installedTagCommitPattern.exec(installedTag)?.[1];
+  const installedCommit = matchCommit(installedTag, installedTagCommitPattern);
   if (installedCommit !== undefined && corePin.startsWith(installedCommit))
     return [];
   return [
