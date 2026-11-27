@@ -5,6 +5,8 @@ The kernel's skills are installed under `.agents/skills/` (and linked under `.cl
 - Write commands on the agent-cli-kernel package: read `.agents/skills/agent-cli-kernel/SKILL.md`.
 - Prove that a CLI built on agent-cli-kernel really works, the way a user meets it: read `.agents/skills/verify-cli/SKILL.md`.
 
+Maintainer skill (public boundary, subpath exports, kernel Pin, shipped pointer): read `.agents/skills/maintain-agent-wiki-core/SKILL.md`.
+
 Use the existing repository CLI at src/cli.ts. Add commands through src/commands.ts.
 Keep domain implementation in separate files and preserve one public application CLI.
 
