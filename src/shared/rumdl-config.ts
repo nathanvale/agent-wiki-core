@@ -13,10 +13,23 @@ const rumdlFolderScanExtensions: ReadonlySet<string> = new Set([
   ".rmd",
 ]);
 
-export type OwnedFiles =
+export type SpecialFileKind = "pipe" | "socket" | "device" | "non-regular file";
+
+export type WalkFailure =
+  | { readonly kind: "linked"; readonly linkedPath: string }
+  | {
+      readonly kind: "special-file";
+      readonly path: string;
+      readonly entryKind: SpecialFileKind;
+    };
+
+export type WalkWikiFilesResult =
   | { readonly kind: "listed"; readonly files: readonly string[] }
-  | { readonly kind: "unreadable-settings"; readonly reason: string }
-  | { readonly kind: "linked"; readonly linkedPath: string };
+  | WalkFailure;
+
+export type OwnedFiles =
+  | WalkWikiFilesResult
+  | { readonly kind: "unreadable-settings"; readonly reason: string };
 
 export type ExcludeGlobsResult =
   | { readonly ok: true; readonly globs: readonly Bun.Glob[] }

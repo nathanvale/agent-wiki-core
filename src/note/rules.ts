@@ -268,6 +268,43 @@ function relativeNotePath(wikiRoot: string, filePath: string): string {
   return rel.replaceAll("\\", "/");
 }
 
+const cutOutputFilePattern = /(?:^|[{,\s])"file"\s*:\s*("(?:\\.|[^"\\])*")/g;
+
+function parseJsonStringLiteral(literal: string): string | null {
+  try {
+    const parsed: unknown = JSON.parse(literal);
+    return typeof parsed === "string" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function extractCutOutputFiles(
+  stdout: string,
+  wikiRoot: string,
+): readonly string[] {
+  const seenLiterals = new Set<string>();
+  const seenPaths = new Set<string>();
+  const files: string[] = [];
+  cutOutputFilePattern.lastIndex = 0;
+  for (
+    let match = cutOutputFilePattern.exec(stdout);
+    match !== null;
+    match = cutOutputFilePattern.exec(stdout)
+  ) {
+    const rawLiteral = match[1];
+    if (rawLiteral === undefined || seenLiterals.has(rawLiteral)) continue;
+    seenLiterals.add(rawLiteral);
+    const parsed = parseJsonStringLiteral(rawLiteral);
+    if (parsed === null || parsed === "") continue;
+    const normalized = relativeNotePath(wikiRoot, parsed);
+    if (seenPaths.has(normalized)) continue;
+    seenPaths.add(normalized);
+    files.push(normalized);
+  }
+  return files;
+}
+
 function compareText(left: string, right: string): number {
   return left < right ? -1 : left > right ? 1 : 0;
 }
