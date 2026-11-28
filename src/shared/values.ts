@@ -20,9 +20,7 @@ export function texts(value: unknown): string[] {
   });
 }
 
-export function unixLineEndings(text: string): string {
-  return text.replaceAll("\r\n", "\n");
-}
+export { unixLineEndings } from "./rules.ts";
 
 function utcDay(date: Date): string {
   return date.toISOString().slice(0, 10);
