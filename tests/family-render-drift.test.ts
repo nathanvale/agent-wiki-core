@@ -172,9 +172,15 @@ describe("family render --wiki", () => {
       templates["templates/note.md"],
       "familyTemplates[templates/note.md]",
     );
-    expect(renderedHeaderFieldNames(noteTemplate)).toEqual([
-      ...alwaysRenderedFields,
-    ]);
+    const expectedBaseFields = [
+      "family",
+      "title",
+      "summary",
+      "created",
+      "tags",
+    ];
+    expect(renderedHeaderFieldNames(noteTemplate)).toEqual(expectedBaseFields);
+    expect<readonly string[]>(alwaysRenderedFields).toEqual(expectedBaseFields);
   });
 
   test("refuses with exit 3 and DOMAIN_PRECONDITION_UNMET when family-table.json is missing", () => {
