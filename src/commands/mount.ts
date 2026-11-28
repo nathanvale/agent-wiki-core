@@ -31,7 +31,6 @@ export { notesCauses as wikiCoreCauses } from "../note/causes.ts";
 export { programPath, usePathParser } from "../shared/program-path.ts";
 export {
   noInput,
-  noWikiRoot,
   preconditionUnmet,
   refused,
   report,
@@ -41,4 +40,5 @@ export {
   wikiOption,
   wikiReadCommand,
   wikiStations,
+  withWikiRoot,
 } from "../shared/wiki-command.ts";
