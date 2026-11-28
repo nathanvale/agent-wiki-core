@@ -36,21 +36,23 @@ word on a term's `_Avoid_` line is never used to name that term, within the
 limits its note in parentheses gives; the same word stays free for another
 term that owns it, as `template` does in `FamilyTemplate`.
 
-| Term                | Folder or file                | Symbols, routes and causes                            |
-| ------------------- | ----------------------------- | ----------------------------------------------------- |
-| Note check          | `src/note/`                   | route `note check`, `noteCheckFor`, `DOMAIN_NOTES_*`  |
-| Consumer guard      | `src/consumer-guard/`         | `installFindings`                                     |
-| Install finding     | inside `src/consumer-guard/`  | type `InstallFinding`, kind `nested-kernel`           |
-| Wiki skill          | `skills/wiki/`                | skill name `wiki`                                     |
-| Shipped pointer     | `skills/wiki/pointer/`        |                                                       |
-| Maintainer skill    | `.agents/skills/`             | never under `skills/`                                 |
-| Note contract       | `src/note-contract/`          | `BaseField`, `FamilyField`, kind `created-missing`    |
-| Note name           | `src/note-name/`              | routes `note-name plan`, `note-name apply`            |
-| Record family       | `src/family/`                 | `FamilyTable`, routes `family check`, `family drift`  |
-| Contacts capability | `src/contacts/`               | capability name `contacts`                            |
-| Contact adapter     | `src/contacts/adapters/`      | one file per adapter prefix; type `ContactAdapter`    |
-| Resolution          | inside `src/contacts/`        | type `Resolution`: `found`, `missing`, `unavailable`  |
-| Header fields       | inside `src/shared/`          | `headerFields` on a note                              |
+| Term                | Folder or file                  | Symbols, routes and causes                            |
+| ------------------- | ------------------------------- | ----------------------------------------------------- |
+| Note check          | `src/note/`                     | route `note check`, `noteCheckFor`, `DOMAIN_NOTES_*`  |
+| Consumer guard      | `src/consumer-guard/`           | `installFindings`                                     |
+| Install finding     | inside `src/consumer-guard/`    | type `InstallFinding`, kind `nested-kernel`           |
+| Wiki skill          | `skills/wiki/`                  | skill name `wiki`                                     |
+| Shipped pointer     | `skills/wiki/pointer/`          |                                                       |
+| Maintainer skill    | `.agents/skills/`               | never under `skills/`                                 |
+| Note contract       | `src/note-contract/`            | `BaseField`, `FamilyField`, kind `created-missing`    |
+| Note name           | `src/note-name/`                | routes `note-name plan`, `note-name apply`            |
+| Record family       | `src/family/`                   | `FamilyTable`, routes `family check`, `family drift`  |
+| Contacts capability | `src/contacts/`                 | capability name `contacts`                            |
+| Contact adapter     | `src/contacts/adapters/`        | one file per adapter prefix; type `ContactAdapter`    |
+| Resolution          | inside `src/contacts/`          | type `Resolution`: `found`, `missing`, `unavailable`  |
+| Header fields       | inside `src/shared/`            | `headerFields` on a note                              |
+| Public surface      | `public-surface.json`           |                                                       |
+| Shipped content     | `tests/shipped-content.test.ts` |                                                       |
 
 A row whose folder does not exist yet fixes the name for the work that
 creates it. When a change needs a name for something no term covers, add the
