@@ -90,6 +90,19 @@ and the consumer wiki name different kernel commits. It is an install
 finding.
 _Avoid_: duplicate kernel, kernel conflict
 
+**Public surface**:
+What the wiki core promises a consumer wiki to keep stable: its commands as
+discovery prints them, its named export entries and their symbols, the header
+fields and environment variables it reads, and its shipped skill files.
+`public-surface.json` records it.
+_Avoid_: API (unqualified), exports
+
+**Shipped content**:
+Every file the wiki core ships for people or agents to read: its skills,
+README, AGENTS.md, glossaries, docs and examples. The leak check refuses
+personal content in it.
+_Avoid_: public files, distribution
+
 ### A wiki and what it holds
 
 **Wiki**:

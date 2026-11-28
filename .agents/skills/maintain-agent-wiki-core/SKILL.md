@@ -1,6 +1,6 @@
 ---
 name: maintain-agent-wiki-core
-description: Maintain the public wiki core. Use when changing this repository to check the public boundary before pushing, expose a module to consumer wikis, keep the kernel Pin aligned, or change the shipped pointer.
+description: Maintain the public wiki core. Use when changing this repository to check the public boundary before pushing, expose a module to consumer wikis, keep the kernel Pin aligned, change the shipped pointer, or check the glossary token count.
 ---
 
 # Maintaining the wiki core
@@ -38,3 +38,15 @@ Any change to the shipped pointer under `skills/wiki/pointer/` alters the instal
 Add a non-empty changeset with `bun run --bun changeset add` describing the consumer-visible change (`scripts/check-gated-paths.ts` only gates `src/` and `package.json`, so it will not catch a missing changeset here).
 
 Done when `.changeset/` holds a non-empty changeset for the shipped pointer change and `bun run check:changesets` exits 0.
+
+## 5. Glossary token count
+
+Measure `GLOSSARY.md` against its 5,000-token cap with `tiktoken`'s `cl100k_base` encoding from a temporary install whenever `GLOSSARY.md` changes:
+
+```sh
+(tmp=$(mktemp -d) && trap 'rm -rf "$tmp"' EXIT && bun add --cwd "$tmp" --silent tiktoken && NODE_PATH="$tmp/node_modules" bun -e 'const { get_encoding } = await import("tiktoken"); console.log(get_encoding("cl100k_base").encode(await Bun.file("GLOSSARY.md").text()).length)')
+```
+
+If the count exceeds 5,000, move entries word for word into context glossaries pointed to by `GLOSSARY-MAP.md` instead of shortening or dropping definitions.
+
+Done when the printed count is at most 5,000 and the temporary folder is removed.
