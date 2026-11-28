@@ -20,10 +20,16 @@ const minimalTable = {
 };
 
 const fullTable = {
+  familyHeader: "from-folder",
+  undeclaredFolders: "family-free",
   baseTag: "example-wiki",
   discoveryTags: ["travel", "home"],
   tagLimit: 2,
+  summaryRequired: false,
   summaryMaxLength: 200,
+  createdRequired: false,
+  noteNames: "dated-title",
+  uniqueNoteNames: false,
   unfiledFolder: "wiki/inbox/",
   familyFreeFolders: ["wiki/inbox/", "wiki/archive/"],
   reservedFamilies: { "wiki/areas/": "area" },
@@ -32,6 +38,7 @@ const fullTable = {
     {
       family: "project",
       folder: "wiki/projects/",
+      noteNames: "any",
       familyFields: [
         { name: "status", value: "seed" },
         { name: "updated", value: '"{{date}}"' },
@@ -167,20 +174,32 @@ describe("family list --wiki", () => {
 
     expect(Object.keys(run.envelope.result.data).toSorted()).toEqual([
       "baseTag",
+      "createdRequired",
       "discoveryTags",
       "families",
       "familyFreeFolders",
+      "familyHeader",
+      "noteNames",
       "renames",
       "reservedFamilies",
       "summaryMaxLength",
+      "summaryRequired",
       "tagLimit",
+      "undeclaredFolders",
       "unfiledFolder",
+      "uniqueNoteNames",
     ]);
     expect(run.envelope.result.data).toEqual({
+      familyHeader: "required",
+      undeclaredFolders: "finding",
       baseTag: null,
       discoveryTags: null,
       tagLimit: 2,
+      summaryRequired: true,
       summaryMaxLength: 200,
+      createdRequired: true,
+      noteNames: "title",
+      uniqueNoteNames: true,
       unfiledFolder: "wiki/inbox/",
       familyFreeFolders: [],
       reservedFamilies: {},
@@ -223,10 +242,16 @@ describe("family list --wiki", () => {
 
     expect(run.exitCode).toBe(0);
     expect(run.envelope.result.data).toEqual({
+      familyHeader: "required",
+      undeclaredFolders: "finding",
       baseTag: null,
       discoveryTags: null,
       tagLimit: null,
+      summaryRequired: true,
       summaryMaxLength: null,
+      createdRequired: true,
+      noteNames: "title",
+      uniqueNoteNames: true,
       unfiledFolder: null,
       familyFreeFolders: [],
       reservedFamilies: {},
@@ -240,6 +265,94 @@ describe("family list --wiki", () => {
         },
       ],
     });
+  });
+
+  function expectRefusedTable(
+    table: Record<string, unknown>,
+    expectedKey: string,
+  ): void {
+    const wiki = familyWikiFixture({ table });
+    const run = runCoreCli(["family", "list", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain(expectedKey);
+  }
+
+  test("refuses noteNames: dated, tagLimit: -1, rootNotes, and subfolders with exit 3 naming the key", () => {
+    const cases: readonly {
+      readonly expectedKey: string;
+      readonly table: Record<string, unknown>;
+    }[] = [
+      {
+        expectedKey: "noteNames",
+        table: { ...minimalTable, noteNames: "dated" },
+      },
+      {
+        expectedKey: "noteNames",
+        table: {
+          families: [
+            {
+              ...minimalTable.families[0],
+              noteNames: "dated",
+            },
+          ],
+        },
+      },
+      {
+        expectedKey: "tagLimit",
+        table: { ...minimalTable, tagLimit: -1 },
+      },
+      {
+        expectedKey: "rootNotes",
+        table: { ...minimalTable, rootNotes: "allow" },
+      },
+      {
+        expectedKey: "rootNotes",
+        table: {
+          families: [
+            {
+              ...minimalTable.families[0],
+              rootNotes: "allow",
+            },
+          ],
+        },
+      },
+      {
+        expectedKey: "subfolders",
+        table: { ...minimalTable, subfolders: true },
+      },
+      {
+        expectedKey: "subfolders",
+        table: {
+          families: [
+            {
+              ...minimalTable.families[0],
+              subfolders: true,
+            },
+          ],
+        },
+      },
+    ];
+
+    for (const entry of cases) {
+      expectRefusedTable(entry.table, entry.expectedKey);
+    }
+  });
+
+  test("refuses bad values on every table setting naming the key", () => {
+    const badSettings: readonly [string, unknown][] = [
+      ["familyHeader", "auto"],
+      ["undeclaredFolders", "ignore"],
+      ["summaryRequired", "yes"],
+      ["createdRequired", 1],
+      ["uniqueNoteNames", "no"],
+    ];
+
+    for (const [key, value] of badSettings) {
+      expectRefusedTable({ ...minimalTable, [key]: value }, key);
+    }
   });
 
   test("agent-wiki-core/family exports readFamilyTable and the table types", () => {
