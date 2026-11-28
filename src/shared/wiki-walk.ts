@@ -2,23 +2,19 @@ import { lstatSync, readdirSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { join, relative } from "node:path";
 import { errorCode, isRumdlMarkdownName } from "./rumdl-config.ts";
-import type { SpecialFileKind } from "./rumdl-config.ts";
+import type {
+  SpecialFileKind,
+  WalkFailure,
+  WalkWikiFilesResult,
+} from "./rumdl-config.ts";
+
+export type { WalkWikiFilesResult };
 
 export const ownedFolders = ["wiki", "templates"] as const;
 
 export type WalkWikiFilesOptions = {
-  readonly folders?: readonly string[];
   readonly isExcluded?: (wikiRelativePath: string) => boolean;
 };
-
-export type WalkWikiFilesResult =
-  | { readonly kind: "listed"; readonly files: readonly string[] }
-  | { readonly kind: "linked"; readonly linkedPath: string }
-  | {
-      readonly kind: "special-file";
-      readonly path: string;
-      readonly entryKind: SpecialFileKind;
-    };
 
 export function statIfPresent(
   read: () => Stats | undefined,
@@ -56,14 +52,6 @@ function specialFileKind(info: Stats): SpecialFileKind {
   if (info.isBlockDevice() || info.isCharacterDevice()) return "device";
   return "non-regular file";
 }
-
-type WalkFailure =
-  | { readonly kind: "linked"; readonly linkedPath: string }
-  | {
-      readonly kind: "special-file";
-      readonly path: string;
-      readonly entryKind: SpecialFileKind;
-    };
 
 type WalkState = {
   readonly wikiRoot: string;
@@ -122,13 +110,12 @@ export function walkWikiFiles(
   wikiRoot: string,
   options: WalkWikiFilesOptions = {},
 ): WalkWikiFilesResult {
-  const folders = options.folders ?? ownedFolders;
   const walk: WalkState = {
     wikiRoot,
     isExcluded: options.isExcluded ?? (() => false),
     files: [],
   };
-  for (const folder of folders) {
+  for (const folder of ownedFolders) {
     const path = join(wikiRoot, folder);
     const info = statIfPresent(() =>
       lstatSync(path, { throwIfNoEntry: false }),
