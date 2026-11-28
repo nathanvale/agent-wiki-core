@@ -39,6 +39,7 @@ export function parseNote(path: string, text: string): Note {
     replacedBy: nonBlank(headerField(properties, "replaced_by")),
     aliases: texts(headerField(properties, "aliases")),
     recordId: asWritten(block, "record_id" satisfies BaseFieldName),
+    variant: nonBlank(headerField(properties, "variant")),
     headerFields: properties,
   };
 }

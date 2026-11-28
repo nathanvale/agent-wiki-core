@@ -11,6 +11,7 @@ export const baseFields = {
   replaced_by: "string",
   aliases: "list",
   record_id: "string",
+  variant: "string",
 } as const;
 
 export type MarkdownFile = {
@@ -24,6 +25,7 @@ export type MarkdownFile = {
   readonly replacedBy: string | null;
   readonly aliases: readonly string[];
   readonly recordId: string | null;
+  readonly variant: string | null;
   readonly headerFields: Readonly<Record<string, unknown>>;
 };
 

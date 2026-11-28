@@ -96,6 +96,7 @@ test("agent-wiki-core/notes exports parseNote, baseFields and sha256Bytes", () =
     "replaced_by",
     "aliases",
     "record_id",
+    "variant",
   ]);
   expect(sha256Bytes(Buffer.from("wiki"))).toHaveLength(64);
 });

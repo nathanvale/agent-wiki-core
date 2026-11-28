@@ -1,5 +1,4 @@
-import { folderOf } from "../shared/rules.ts";
-import type { baseFields, Note } from "../shared/rules.ts";
+import type { baseFields } from "../shared/rules.ts";
 import {
   checkNoteNames,
   checkTableSettings,
@@ -10,6 +9,15 @@ import type {
   NoteNamesSetting,
   TableSettings,
 } from "./settings/rules.ts";
+import {
+  checkAfterVariants,
+  checkFamilyVariantRules,
+  checkVariants,
+} from "./variants/rules.ts";
+import type { Variant, VariantHeading } from "./variants/rules.ts";
+
+export { placementOf } from "./placement/rules.ts";
+export type { Variant, VariantHeading };
 
 export type FamilyField = {
   readonly name: string;
@@ -20,6 +28,7 @@ export type Heading = {
   readonly name: string;
   readonly hint?: string;
   readonly optional: boolean;
+  readonly afterVariants?: boolean;
 };
 
 export type Rename = {
@@ -33,6 +42,7 @@ export type Family = {
   readonly folder: string;
   readonly familyFields: readonly FamilyField[];
   readonly headings: readonly Heading[];
+  readonly variants?: readonly Variant[];
   readonly noteNames?: NoteNamesSetting;
 };
 
@@ -66,10 +76,11 @@ const familyKeys = new Set([
   "folder",
   "familyFields",
   "headings",
+  "variants",
   "noteNames",
 ]);
 const familyFieldKeys = new Set(["name", "value"]);
-const headingKeys = new Set(["name", "hint", "optional"]);
+const headingKeys = new Set(["name", "hint", "optional", "afterVariants"]);
 const renameKeys = new Set(["kind", "from", "to"]);
 
 export const alwaysRenderedFields = [
@@ -284,13 +295,19 @@ function checkHeading(value: unknown, prefix: string): Check<Heading> {
     return fail(`Key "${prefix}.optional" must be a boolean.`);
   }
   const hint = record["hint"];
-  if (hint === undefined) {
-    return ok({ name: name.value, optional });
-  }
-  if (typeof hint !== "string") {
+  if (hint !== undefined && typeof hint !== "string") {
     return fail(`Key "${prefix}.hint" must be a string when present.`);
   }
-  return ok({ name: name.value, hint, optional });
+  const afterVariants = checkAfterVariants(record["afterVariants"], prefix);
+  if (!afterVariants.ok) return afterVariants;
+  return ok({
+    name: name.value,
+    ...(hint === undefined ? {} : { hint }),
+    optional,
+    ...(afterVariants.value === undefined
+      ? {}
+      : { afterVariants: afterVariants.value }),
+  });
 }
 
 function checkHeadings(
@@ -299,6 +316,13 @@ function checkHeadings(
 ): Check<readonly Heading[]> {
   return checkList(value, prefix, checkHeading);
 }
+
+const variantHelpers = {
+  toRecord,
+  checkAllowedKeys,
+  nonBlankString,
+  checkList,
+};
 
 function checkFamily(value: unknown, prefix: string): Check<Family> {
   const record = toRecord(value);
@@ -316,12 +340,26 @@ function checkFamily(value: unknown, prefix: string): Check<Family> {
   if (!familyFields.ok) return familyFields;
   const headings = checkHeadings(record["headings"], `${prefix}.headings`);
   if (!headings.ok) return headings;
+  const variants = checkVariants(
+    record["variants"],
+    `${prefix}.variants`,
+    variantHelpers,
+  );
+  if (!variants.ok) return variants;
+  const variantRuleFailure = checkFamilyVariantRules(
+    prefix,
+    familyFields.value,
+    headings.value,
+    variants.value,
+  );
+  if (variantRuleFailure !== null) return fail(variantRuleFailure);
   const rawNoteNames = record["noteNames"];
   const base: Family = {
     family: family.value,
     folder: folder.value,
     familyFields: familyFields.value,
     headings: headings.value,
+    ...(variants.value === undefined ? {} : { variants: variants.value }),
   };
   if (rawNoteNames === undefined) return ok(base);
   const noteNames = checkNoteNames(rawNoteNames, `${prefix}.noteNames`);
@@ -406,92 +444,4 @@ export function familyTableFrom(
       families: families.value,
     },
   };
-}
-
-type FolderPlacement<K extends "family-free" | "unknown-folder"> = {
-  readonly kind: K;
-  readonly folder: string;
-  readonly expectedFamily: null;
-  readonly effectiveFamily: Family | null;
-};
-
-type NotePlacement =
-  | {
-      readonly kind: "unfiled";
-      readonly folder: string;
-      readonly expectedFamily: null;
-      readonly effectiveFamily: null;
-    }
-  | {
-      readonly kind: "family-folder";
-      readonly folder: string;
-      readonly expectedFamily: string;
-      readonly effectiveFamily: Family | null;
-    }
-  | FolderPlacement<"family-free">
-  | FolderPlacement<"unknown-folder">
-  | {
-      readonly kind: "wiki-folder";
-      readonly folder: null;
-      readonly expectedFamily: null;
-      readonly effectiveFamily: Family | null;
-    };
-
-function definedFamily(
-  familyName: string | null,
-  table: FamilyTable,
-): Family | null {
-  if (familyName === null) return null;
-  return table.families.find((entry) => entry.family === familyName) ?? null;
-}
-
-export function placementOf(
-  note: Pick<Note, "path" | "family">,
-  table: FamilyTable,
-): NotePlacement {
-  const folder = folderOf(note.path);
-  if (table.unfiledFolder !== null && folder === table.unfiledFolder) {
-    return {
-      kind: "unfiled",
-      folder,
-      expectedFamily: null,
-      effectiveFamily: null,
-    };
-  }
-  const noteFamily = definedFamily(note.family, table);
-  if (folder === null) {
-    return {
-      kind: "wiki-folder",
-      folder: null,
-      expectedFamily: null,
-      effectiveFamily: noteFamily,
-    };
-  }
-  const folderFamily =
-    table.families.find((entry) => entry.folder === folder) ?? null;
-  if (folderFamily !== null) {
-    return {
-      kind: "family-folder",
-      folder,
-      expectedFamily: folderFamily.family,
-      effectiveFamily: noteFamily ?? folderFamily,
-    };
-  }
-  if (Object.hasOwn(table.reservedFamilies, folder)) {
-    const reserved = table.reservedFamilies[folder];
-    if (reserved !== undefined) {
-      return {
-        kind: "family-folder",
-        folder,
-        expectedFamily: reserved,
-        effectiveFamily: noteFamily ?? definedFamily(reserved, table),
-      };
-    }
-  }
-  const kind =
-    table.familyFreeFolders.includes(folder) ||
-    table.undeclaredFolders === "family-free"
-      ? "family-free"
-      : "unknown-folder";
-  return { kind, folder, expectedFamily: null, effectiveFamily: noteFamily };
 }

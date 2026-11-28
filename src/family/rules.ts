@@ -4,11 +4,17 @@ import { baseFieldFindings } from "../note-contract/rules.ts";
 import { rawSectionsOf } from "../shared/rules.ts";
 import type { Note } from "../shared/rules.ts";
 
-export type Check = "base-fields" | "heading-rule" | "wiki-rule";
+export type Check = "base-fields" | "heading-rule" | "variant" | "wiki-rule";
 
 type HeadingRuleFinding = {
   readonly path: string;
   readonly kind: "required-section-empty";
+  readonly detail: string;
+};
+
+type VariantFinding = {
+  readonly path: string;
+  readonly kind: "variant-missing" | "variant-not-installed";
   readonly detail: string;
 };
 
@@ -69,6 +75,30 @@ function headingRuleFindings(
   return findings;
 }
 
+function variantFindings(note: Note, family: Family | null): VariantFinding[] {
+  if (family === null || family.variants === undefined) return [];
+  if (note.variant === null) {
+    return [
+      {
+        path: note.path,
+        kind: "variant-missing",
+        detail: `Missing variant header field for family "${family.family}".`,
+      },
+    ];
+  }
+  const declared = family.variants.some((entry) => entry.name === note.variant);
+  if (!declared) {
+    return [
+      {
+        path: note.path,
+        kind: "variant-not-installed",
+        detail: `Variant "${note.variant}" is not declared for family "${family.family}" in family-table.json.`,
+      },
+    ];
+  }
+  return [];
+}
+
 function tagWikiRuleFindings(findings: readonly WikiRuleFinding[]): Finding[] {
   return findings.map((finding) => ({
     ...finding,
@@ -92,6 +122,10 @@ export function checkNote(
     ...headingRuleFindings(note, placement.effectiveFamily).map((finding) => ({
       ...finding,
       check: "heading-rule" as const,
+    })),
+    ...variantFindings(note, placement.effectiveFamily).map((finding) => ({
+      ...finding,
+      check: "variant" as const,
     })),
   ];
 
