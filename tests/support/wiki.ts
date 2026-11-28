@@ -41,6 +41,39 @@ export function wikiFixture(files: Record<string, string>): string {
   return folder;
 }
 
+export function spawnCoreCliJson(
+  args: readonly string[],
+  options: {
+    readonly extraEnv?: Readonly<Record<string, string>>;
+    readonly workingDirectory?: string;
+    readonly timeoutMilliseconds?: number;
+  } = {},
+): { readonly exitCode: number; readonly stdout: string } {
+  const stateHome = wikiFixture({});
+  const run = Bun.spawnSync(
+    ["bun", join(root, "src/cli.ts"), ...args, "--json"],
+    {
+      cwd: options.workingDirectory ?? root,
+      env: {
+        ...process.env,
+        XDG_STATE_HOME: stateHome,
+        ...options.extraEnv,
+      },
+      stdout: "pipe",
+      stderr: "pipe",
+      timeout: options.timeoutMilliseconds ?? 10_000,
+      killSignal: "SIGKILL",
+    },
+  );
+  const stdout = run.stdout.toString();
+  if (stdout.trim() === "") {
+    throw new Error(
+      `Expected JSON stdout, got exit=${String(run.exitCode)} stderr=${run.stderr.toString()}`,
+    );
+  }
+  return { exitCode: run.exitCode, stdout };
+}
+
 export function fingerprint(folder: string): string {
   const walk = (path: string): string[] =>
     readdirSync(path)

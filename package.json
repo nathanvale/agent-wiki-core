@@ -6,6 +6,7 @@
   "exports": {
     "./commands": "./src/commands/mount.ts",
     "./consumer-guard": "./src/consumer-guard/index.ts",
+    "./family": "./src/commands/family.ts",
     "./notes": "./src/commands/notes.ts"
   },
   "packageManager": "bun@1.4.4",
