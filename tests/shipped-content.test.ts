@@ -39,12 +39,13 @@ const reservedEmailSuffixes: readonly string[] = [
 
 const emailPattern =
   /\b[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)\b/g;
-const directHomePathPatterns: readonly RegExp[] = [
+const tildeHomePathPattern = /(?<![\w./\\~])~\/[^\s"'`<>)\]*]*/g;
+const homePathPatterns: readonly RegExp[] = [
   /\/Users\/[A-Za-z0-9._-]+/g,
   /\/home\/[A-Za-z0-9._-]+/g,
   /C:\\Users\\[^\s"'`<>)]*/gi,
+  tildeHomePathPattern,
 ];
-const tildeHomePathPattern = /(?:^|[\s"'`(,=])(~\/[^\s"'`<>)]*)/g;
 
 type AllowEntry = {
   readonly file: string;
@@ -160,24 +161,13 @@ function homePathFindings(
   line: string,
 ): ShippedContentFinding[] {
   const findings: ShippedContentFinding[] = [];
-  for (const pattern of directHomePathPatterns) {
+  for (const pattern of homePathPatterns) {
     for (const match of line.matchAll(pattern)) {
       findings.push({
         file,
         line: lineNumber,
         kind: "home-path",
         match: match[0],
-      });
-    }
-  }
-  for (const match of line.matchAll(tildeHomePathPattern)) {
-    const captured = match[1] ?? "";
-    if (captured !== "") {
-      findings.push({
-        file,
-        line: lineNumber,
-        kind: "home-path",
-        match: captured,
       });
     }
   }
@@ -449,6 +439,43 @@ test("scans examples/ when present and respects allow-list entries", () => {
           match: "person@personal-domain.org",
         },
       ]);
+    },
+  );
+});
+
+test("refuses tilde home paths after punctuation delimiters and accepts non-home tildes", () => {
+  const cases: readonly {
+    readonly line: string;
+    readonly expectedMatch: string | undefined;
+  }[] = [
+    { line: "<~/notes>", expectedMatch: "~/notes" },
+    { line: "[~/notes]", expectedMatch: "~/notes" },
+    { line: "dir:~/notes", expectedMatch: "~/notes" },
+    { line: "**~/notes**", expectedMatch: "~/notes" },
+    { line: "PATH=/usr/bin:~/bin", expectedMatch: "~/bin" },
+    { line: "foo/~/bar", expectedMatch: undefined },
+    { line: "https://example.com/~/foo", expectedMatch: undefined },
+  ];
+
+  const expectedFindings: ShippedContentFinding[] = [];
+  for (const [index, entry] of cases.entries()) {
+    if (entry.expectedMatch !== undefined) {
+      expectedFindings.push({
+        file: "GLOSSARY.md",
+        line: index + 1,
+        kind: "home-path",
+        match: entry.expectedMatch,
+      });
+    }
+  }
+
+  withShippedFixture(
+    {
+      "GLOSSARY.md": cases.map((entry) => entry.line).join("\n"),
+    },
+    (root) => {
+      const result = scanShippedContent(root, []);
+      expect(result.findings).toEqual(expectedFindings);
     },
   );
 });
