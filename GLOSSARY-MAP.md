@@ -44,9 +44,11 @@ term that owns it, as `template` does in `FamilyTemplate`.
 | Wiki skill          | `skills/wiki/`                  | skill name `wiki`                                     |
 | Shipped pointer     | `skills/wiki/pointer/`          |                                                       |
 | Maintainer skill    | `.agents/skills/`               | never under `skills/`                                 |
-| Note contract       | `src/note-contract/`            | `BaseField`, `FamilyField`, kind `created-missing`    |
-| Note name           | `src/note-name/`                | routes `note-name plan`, `note-name apply`            |
-| Record family       | `src/family/`                   | `FamilyTable`, routes `family check`, `family drift`  |
+| Note contract       | `src/note-contract/`                                                | `BaseField`, `baseFieldFindings`, kind `created-missing`             |
+| Note name           | `src/note-name/`                                                    | routes `note-name plan`, `note-name apply`                           |
+| Family table        | `src/family-table/`, with the reader in `src/shared/family-table.ts` | `FamilyTable`, `FamilyField`, `readFamilyTable`                      |
+| Record family       | `src/family/`                                                       | routes `family check`, `family drift`, `family list`, `family render` |
+| Record check        | inside `src/family/`                                                | `checkNote`, `Finding`                                               |
 | Contacts capability | `src/contacts/`                 | capability name `contacts`                            |
 | Contact adapter     | `src/contacts/adapters/`        | one file per adapter prefix; type `ContactAdapter`    |
 | Resolution          | inside `src/contacts/`          | type `Resolution`: `found`, `missing`, `unavailable`  |
