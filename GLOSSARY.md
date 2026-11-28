@@ -156,7 +156,7 @@ _Avoid_: checksum, digest; hash (unqualified)
 
 **Record family**:
 The grouping of records by what they own, such as people, projects or
-products. A family decides the record's folder, its family template and its
+products. A family decides the record's folder, its family templates and its
 headings. Say family once the context is clear.
 _Avoid_: type, category, taxonomy; kind (for a family: a finding has a kind)
 
@@ -185,14 +185,21 @@ family template yet.
 A folder inside the wiki folder that holds notes of any family or none.
 
 **Family template**:
-The Markdown file a new record of one family starts from.
+The Markdown file a new record of one family starts from. A family with
+variants has one family template per variant.
 _Avoid_: template (unqualified: Template is the repository that makes
 repositories)
+
+**Variant**:
+One of several family templates that a record family declares; a note's
+`variant` header field names the one it follows.
+_Avoid_: type, kind, subfamily, research type
 
 **Heading rule**:
 The record of which headings a family's records carry, in what order, and
 which may be left out when empty. The family table holds it. The headings it
-does not mark optional are the family's required headings.
+does not mark optional are the family's required headings. A variant has its
+own heading rule, whose headings are all optional.
 _Avoid_: heading template, outline
 
 **Base tag**:
@@ -231,7 +238,8 @@ A header field of the note contract that the wiki core reads on every note,
 whatever its family. `family`, `summary`, `created` and `tags` are required;
 `title`, `aliases`, `record_id` and `replaced_by` are understood when
 present. Every family template carries the required ones and `title`. The
-created date is one.
+created date is one. `variant` is one, required where the note's family
+declares variants.
 _Avoid_: required field (a family field can be required too), core field
 
 **Family field**:
@@ -351,7 +359,7 @@ _Avoid_: broken link (the target can exist on this machine), external link
 **Record check**:
 Every rule about one record on its own: its folder, family, tags, headings,
 title, summary, links and body. It is made of independent checks, each named
-on its findings: base fields, heading rule and wiki rules. A record's
+on its findings: base fields, heading rule, variant and wiki rules. A record's
 findings are every check's findings together; no check removes another's
 requirement.
 
