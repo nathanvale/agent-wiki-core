@@ -1,3 +1,4 @@
+import { alwaysRenderedFields } from "../family-table/rules.ts";
 import type { Family, FamilyTable } from "../family-table/rules.ts";
 
 export type InstalledFamilyTemplate = {
@@ -17,13 +18,17 @@ export type TemplateDriftFinding = {
 };
 
 function renderFamilyTemplate(family: Family, baseTag: string | null): string {
+  const baseFieldValues: Record<(typeof alwaysRenderedFields)[number], string> =
+    {
+      family: family.family,
+      title: '"{{title}}"',
+      summary: '""',
+      created: '"{{date}}"',
+      tags: `[${baseTag === null ? "" : baseTag}]`,
+    };
   const headerLines = [
     "---",
-    `family: ${family.family}`,
-    'title: "{{title}}"',
-    'summary: ""',
-    'created: "{{date}}"',
-    `tags: [${baseTag === null ? "" : baseTag}]`,
+    ...alwaysRenderedFields.map((name) => `${name}: ${baseFieldValues[name]}`),
     ...family.familyFields.map((field) => `${field.name}: ${field.value}`),
     "---",
   ];

@@ -1,7 +1,20 @@
 import { describe, expect, test } from "bun:test";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
+import { alwaysRenderedFields } from "../src/family-table/rules.ts";
+import { headerPattern } from "../src/shared/rules.ts";
 import { familyWikiFixture, runCoreCli } from "./support/family-wiki.ts";
+import { readObject, readString } from "./support/json.ts";
+
+function renderedHeaderFieldNames(templateText: string): readonly string[] {
+  const match = headerPattern.exec(templateText);
+  if (match === null) return [];
+  const headerBlock = match[1] ?? "";
+  return headerBlock
+    .split("\n")
+    .filter((line) => line.length > 0)
+    .map((line) => line.slice(0, line.indexOf(":")));
+}
 
 const multiFamilyTable = {
   baseTag: "example-wiki",
@@ -140,6 +153,28 @@ describe("family render --wiki", () => {
         "templates/note.md": expectedNullBaseTagTemplate,
       },
     });
+  });
+
+  test("renders the always-rendered base fields in the exact order owned by alwaysRenderedFields", () => {
+    const wiki = familyWikiFixture({ table: nullBaseTagTable });
+    const run = runCoreCli(["family", "render", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(0);
+    expect(run.envelope.result.data).not.toBeNull();
+    if (run.envelope.result.data === null) return;
+
+    const templates = readObject(
+      run.envelope.result.data["familyTemplates"],
+      "familyTemplates",
+      (record) => record,
+    );
+    const noteTemplate = readString(
+      templates["templates/note.md"],
+      "familyTemplates[templates/note.md]",
+    );
+    expect(renderedHeaderFieldNames(noteTemplate)).toEqual([
+      ...alwaysRenderedFields,
+    ]);
   });
 
   test("refuses with exit 3 and DOMAIN_PRECONDITION_UNMET when family-table.json is missing", () => {
