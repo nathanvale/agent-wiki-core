@@ -3,7 +3,12 @@ import { mkdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseJson, readObject, readString } from "./support/json.ts";
 import { cleanTargetNote, makeFakeRumdl } from "./support/note-check.ts";
-import { readResultFields, root, wikiFixture } from "./support/wiki.ts";
+import {
+  makeNamedPipe,
+  readResultFields,
+  root,
+  wikiFixture,
+} from "./support/wiki.ts";
 
 const hostileTimeoutMilliseconds = 10_000;
 
@@ -50,20 +55,6 @@ function runHostileNoteCheck(
 
 function noisyNoteContent(findingCount: number): string {
   return `# Noisy\n\n${"trailing spaces line   \n".repeat(findingCount)}`;
-}
-
-function makeNamedPipe(pipePath: string): void {
-  const created = Bun.spawnSync(["mkfifo", pipePath], {
-    stdout: "pipe",
-    stderr: "pipe",
-    timeout: 10_000,
-    killSignal: "SIGKILL",
-  });
-  if (created.exitCode !== 0) {
-    throw new Error(
-      `mkfifo failed for ${pipePath}: ${created.stderr.toString()}`,
-    );
-  }
 }
 
 describe("hostile entries", () => {

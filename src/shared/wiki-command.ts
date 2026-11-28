@@ -1,7 +1,8 @@
 import { resolve } from "node:path";
 import { command, commonCauses, station } from "agent-cli-kernel";
 import type { InputSchema, JsonValue, ParsedInput } from "agent-cli-kernel";
-import { isWikiRoot } from "./markdown-files.ts";
+import { WikiReadRefusal } from "./wiki-read.ts";
+import { wikiRootRefusal } from "./wiki-walk.ts";
 
 const unchanged = {
   completed: [],
@@ -60,6 +61,12 @@ export function refused(message: string) {
 export const noWikiRoot = refused(
   "That path is not a wiki root: it has no wiki/ folder inside it.",
 );
+
+function wikiReadRefusalBody(error: WikiReadRefusal) {
+  return refused(
+    `${error.path} cannot be read (${error.reason}). Repair: remove or replace the named entry, then run the command again.`,
+  );
+}
 
 const stationWords = {
   retryDelayPolicy: { kind: "none" },
@@ -168,9 +175,24 @@ export function wikiReadCommand<
       if (typeof rawWiki !== "string")
         return context.result(preconditionUnmet(spec.identity), noWikiRoot);
       const wikiRoot = resolve(rawWiki);
-      if (!isWikiRoot(wikiRoot))
-        return context.result(preconditionUnmet(spec.identity), noWikiRoot);
-      const outcome = answer(wikiRoot, parsed);
+      const rootProblem = wikiRootRefusal(wikiRoot);
+      if (rootProblem !== null)
+        return context.result(
+          preconditionUnmet(spec.identity),
+          refused(rootProblem),
+        );
+      let outcome: WikiReadAnswer;
+      try {
+        outcome = answer(wikiRoot, parsed);
+      } catch (error) {
+        if (error instanceof WikiReadRefusal) {
+          return context.result(
+            preconditionUnmet(spec.identity),
+            wikiReadRefusalBody(error),
+          );
+        }
+        throw error;
+      }
       if (outcome.kind === "refused")
         return context.result(
           preconditionUnmet(spec.identity),

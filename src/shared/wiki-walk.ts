@@ -13,7 +13,13 @@ export type { WalkWikiFilesResult };
 export const ownedFolders = ["wiki", "templates"] as const;
 
 export type WalkWikiFilesOptions = {
+  readonly folders?: readonly string[];
   readonly isExcluded?: (wikiRelativePath: string) => boolean;
+  readonly includeEntry?: (name: string, wikiRelativePath: string) => boolean;
+  readonly handleDirectory?: (
+    name: string,
+    wikiRelativePath: string,
+  ) => "traverse" | "stop";
 };
 
 export function statIfPresent(
@@ -56,6 +62,11 @@ function specialFileKind(info: Stats): SpecialFileKind {
 type WalkState = {
   readonly wikiRoot: string;
   readonly isExcluded: (wikiRelativePath: string) => boolean;
+  readonly includeEntry: (name: string, wikiRelativePath: string) => boolean;
+  readonly handleDirectory: (
+    name: string,
+    wikiRelativePath: string,
+  ) => "traverse" | "stop";
   readonly files: string[];
 };
 
@@ -77,15 +88,19 @@ function classifyEntry(
     return { kind: "linked", linkedPath: wikiRelativePath };
   }
   if (info.isDirectory()) {
+    if (walk.handleDirectory(name, wikiRelativePath) === "stop") return null;
     return walkDirectory(walk, fullPath);
   }
   if (info.isFile()) {
-    if (isRumdlMarkdownName(name) && !walk.isExcluded(wikiRelativePath)) {
+    if (
+      walk.includeEntry(name, wikiRelativePath) &&
+      !walk.isExcluded(wikiRelativePath)
+    ) {
       walk.files.push(fullPath);
     }
     return null;
   }
-  if (isRumdlMarkdownName(name)) {
+  if (walk.includeEntry(name, wikiRelativePath)) {
     return {
       kind: "special-file",
       path: wikiRelativePath,
@@ -106,6 +121,34 @@ function walkDirectory(walk: WalkState, folder: string): WalkFailure | null {
   return null;
 }
 
+function resolveStartFolder(
+  wikiRoot: string,
+  folder: string,
+):
+  | { readonly kind: "directory"; readonly path: string }
+  | { readonly kind: "skip" }
+  | WalkFailure {
+  const segments = folder
+    .replaceAll("\\", "/")
+    .split("/")
+    .filter((segment) => segment !== "" && segment !== ".");
+  let current = wikiRoot;
+  let relativePath = "";
+  for (const segment of segments) {
+    current = join(current, segment);
+    relativePath = relativePath === "" ? segment : `${relativePath}/${segment}`;
+    const info = statIfPresent(() =>
+      lstatSync(current, { throwIfNoEntry: false }),
+    );
+    if (info === undefined) return { kind: "skip" };
+    if (info.isSymbolicLink()) {
+      return { kind: "linked", linkedPath: `${relativePath}/` };
+    }
+    if (!info.isDirectory()) return { kind: "skip" };
+  }
+  return { kind: "directory", path: current };
+}
+
 export function walkWikiFiles(
   wikiRoot: string,
   options: WalkWikiFilesOptions = {},
@@ -113,19 +156,15 @@ export function walkWikiFiles(
   const walk: WalkState = {
     wikiRoot,
     isExcluded: options.isExcluded ?? (() => false),
+    includeEntry: options.includeEntry ?? ((name) => isRumdlMarkdownName(name)),
+    handleDirectory: options.handleDirectory ?? (() => "traverse"),
     files: [],
   };
-  for (const folder of ownedFolders) {
-    const path = join(wikiRoot, folder);
-    const info = statIfPresent(() =>
-      lstatSync(path, { throwIfNoEntry: false }),
-    );
-    if (info === undefined) continue;
-    if (info.isSymbolicLink()) {
-      return { kind: "linked", linkedPath: `${folder}/` };
-    }
-    if (!info.isDirectory()) continue;
-    const failure = walkDirectory(walk, path);
+  for (const folder of options.folders ?? ownedFolders) {
+    const resolved = resolveStartFolder(wikiRoot, folder);
+    if (resolved.kind === "skip") continue;
+    if (resolved.kind !== "directory") return resolved;
+    const failure = walkDirectory(walk, resolved.path);
     if (failure !== null) return failure;
   }
   return { kind: "listed", files: walk.files };
