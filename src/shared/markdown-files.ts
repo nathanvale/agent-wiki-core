@@ -27,11 +27,6 @@ import {
 import type { ExcludeGlobsResult, OwnedFiles } from "./rumdl-config.ts";
 import { ownedFolders, statIfPresent, walkWikiFiles } from "./wiki-walk.ts";
 
-export type FamilyTemplateFile = {
-  readonly path: string;
-  readonly text: string | null;
-};
-
 export type RenameInputs = {
   readonly markdownFiles: readonly MarkdownFile[];
   readonly texts: ReadonlyMap<string, string>;
@@ -170,22 +165,6 @@ export function readRecords(wikiRoot: string): Note[] {
   return wikiNotes(wikiRoot).filter(
     (note) => folderOf(note.path) !== null || note.family !== null,
   );
-}
-
-export function readFamilyTemplates(wikiRoot: string): FamilyTemplateFile[] {
-  const files = filesInWikiRoot(wikiRoot, "templates")
-    .filter((path) => path.endsWith(".md"))
-    .map((path) => ({
-      path,
-      text: readFileSync(join(wikiRoot, path), "utf8"),
-    }));
-  const folder = join(wikiRoot, "templates");
-  const folders = existsSync(folder)
-    ? readdirSync(folder, { withFileTypes: true })
-        .filter((item) => item.isDirectory() && item.name.endsWith(".md"))
-        .map((item) => ({ path: `templates/${item.name}`, text: null }))
-    : [];
-  return [...files, ...folders];
 }
 
 const configFile = ".claude-obsidian.json";

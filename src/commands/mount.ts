@@ -1,4 +1,6 @@
+import { familyDriftFor } from "../family/drift.ts";
 import { familyListFor } from "../family/list.ts";
+import { familyRenderFor } from "../family/render.ts";
 import { noteCheckFor } from "../note/check.ts";
 import type { NoteCheckOptions } from "../note/check.ts";
 
@@ -8,14 +10,18 @@ export function wikiCoreFor<const Cli extends string>(
   cli: Cli,
   options: WikiCoreOptions,
 ) {
-  return [noteCheckFor(cli, options), familyListFor(cli)] as const;
+  return [
+    noteCheckFor(cli, options),
+    familyDriftFor(cli),
+    familyListFor(cli),
+    familyRenderFor(cli),
+  ] as const;
 }
 
 export { notesCauses as wikiCoreCauses } from "../note/causes.ts";
 export { programPath, usePathParser } from "../shared/program-path.ts";
 export {
   noInput,
-  noInputCommand,
   noWikiRoot,
   preconditionUnmet,
   refused,
