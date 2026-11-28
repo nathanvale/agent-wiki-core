@@ -1,3 +1,5 @@
+import type { baseFields } from "../shared/rules.ts";
+
 export type FamilyField = {
   readonly name: string;
   readonly value: string;
@@ -55,13 +57,9 @@ const familyFieldKeys = new Set(["name", "value"]);
 const headingKeys = new Set(["name", "hint", "optional"]);
 const renameKeys = new Set(["kind", "from", "to"]);
 
-const alwaysRenderedFields = new Set([
-  "family",
-  "title",
-  "summary",
-  "created",
-  "tags",
-]);
+const alwaysRenderedFields: ReadonlySet<string> = new Set<
+  keyof typeof baseFields
+>(["family", "title", "summary", "created", "tags"]);
 
 const familyFieldNamePattern = /^[a-z][a-z0-9_]*$/;
 
@@ -134,17 +132,29 @@ function nullableInteger(
   return ok(value);
 }
 
-function stringList(value: unknown, key: string): Check<readonly string[]> {
-  if (!Array.isArray(value)) {
-    return fail(`Key "${key}" must be an array of strings.`);
-  }
-  const items: string[] = [];
+function checkList<T>(
+  value: unknown,
+  key: string,
+  checkItem: (item: unknown, itemKey: string) => Check<T>,
+  notArrayDetail = `Key "${key}" must be an array.`,
+): Check<readonly T[]> {
+  if (!Array.isArray(value)) return fail(notArrayDetail);
+  const items: T[] = [];
   for (let index = 0; index < value.length; index += 1) {
-    const entry = nonBlankString(value[index], `${key}[${String(index)}]`);
-    if (!entry.ok) return entry;
-    items.push(entry.value);
+    const item = checkItem(value[index], `${key}[${String(index)}]`);
+    if (!item.ok) return item;
+    items.push(item.value);
   }
   return ok(items);
+}
+
+function stringList(value: unknown, key: string): Check<readonly string[]> {
+  return checkList(
+    value,
+    key,
+    nonBlankString,
+    `Key "${key}" must be an array of strings.`,
+  );
 }
 
 function nullableStringList(
@@ -201,14 +211,7 @@ function checkRename(value: unknown, prefix: string): Check<Rename> {
 
 function checkRenames(value: unknown): Check<readonly Rename[]> {
   if (value === undefined) return ok([]);
-  if (!Array.isArray(value)) return fail('Key "renames" must be an array.');
-  const items: Rename[] = [];
-  for (let index = 0; index < value.length; index += 1) {
-    const item = checkRename(value[index], `renames[${String(index)}]`);
-    if (!item.ok) return item;
-    items.push(item.value);
-  }
-  return ok(items);
+  return checkList(value, "renames", checkRename);
 }
 
 function checkFamilyField(value: unknown, prefix: string): Check<FamilyField> {
@@ -224,7 +227,7 @@ function checkFamilyField(value: unknown, prefix: string): Check<FamilyField> {
   }
   if (alwaysRenderedFields.has(rawName)) {
     return fail(
-      `Key "${prefix}.name" cannot be "${rawName}", which is a base field.`,
+      `Key "${prefix}.name" cannot be "${rawName}", which is an always-rendered base field.`,
     );
   }
   const rawValue = record["value"];
@@ -243,14 +246,7 @@ function checkFamilyFields(
   prefix: string,
 ): Check<readonly FamilyField[]> {
   if (value === undefined) return ok([]);
-  if (!Array.isArray(value)) return fail(`Key "${prefix}" must be an array.`);
-  const items: FamilyField[] = [];
-  for (let index = 0; index < value.length; index += 1) {
-    const item = checkFamilyField(value[index], `${prefix}[${String(index)}]`);
-    if (!item.ok) return item;
-    items.push(item.value);
-  }
-  return ok(items);
+  return checkList(value, prefix, checkFamilyField);
 }
 
 function checkHeading(value: unknown, prefix: string): Check<Heading> {
@@ -278,14 +274,7 @@ function checkHeadings(
   value: unknown,
   prefix: string,
 ): Check<readonly Heading[]> {
-  if (!Array.isArray(value)) return fail(`Key "${prefix}" must be an array.`);
-  const items: Heading[] = [];
-  for (let index = 0; index < value.length; index += 1) {
-    const item = checkHeading(value[index], `${prefix}[${String(index)}]`);
-    if (!item.ok) return item;
-    items.push(item.value);
-  }
-  return ok(items);
+  return checkList(value, prefix, checkHeading);
 }
 
 function checkFamily(value: unknown, prefix: string): Check<Family> {
@@ -313,15 +302,12 @@ function checkFamily(value: unknown, prefix: string): Check<Family> {
 }
 
 function checkFamilies(value: unknown): Check<readonly Family[]> {
-  if (!Array.isArray(value))
-    return fail('Key "families" is required and must be an array.');
-  const items: Family[] = [];
-  for (let index = 0; index < value.length; index += 1) {
-    const item = checkFamily(value[index], `families[${String(index)}]`);
-    if (!item.ok) return item;
-    items.push(item.value);
-  }
-  return ok(items);
+  return checkList(
+    value,
+    "families",
+    checkFamily,
+    'Key "families" is required and must be an array.',
+  );
 }
 
 export function familyTableFrom(
