@@ -58,9 +58,17 @@ const familyFieldKeys = new Set(["name", "value"]);
 const headingKeys = new Set(["name", "hint", "optional"]);
 const renameKeys = new Set(["kind", "from", "to"]);
 
-const alwaysRenderedFields: ReadonlySet<string> = new Set<
-  keyof typeof baseFields
->(["family", "title", "summary", "created", "tags"]);
+export const alwaysRenderedFields = [
+  "family",
+  "title",
+  "summary",
+  "created",
+  "tags",
+] as const satisfies readonly (keyof typeof baseFields)[];
+
+const alwaysRenderedFieldSet: ReadonlySet<string> = new Set(
+  alwaysRenderedFields,
+);
 
 const familyFieldNamePattern = /^[a-z][a-z0-9_]*$/;
 
@@ -226,7 +234,7 @@ function checkFamilyField(value: unknown, prefix: string): Check<FamilyField> {
       `Key "${prefix}.name" (${String(rawName)}) must match ^[a-z][a-z0-9_]*$.`,
     );
   }
-  if (alwaysRenderedFields.has(rawName)) {
+  if (alwaysRenderedFieldSet.has(rawName)) {
     return fail(
       `Key "${prefix}.name" cannot be "${rawName}", which is an always-rendered base field.`,
     );
