@@ -25,11 +25,12 @@ export class WikiReadRefusal extends Error {
 const maxWikiReadBytes = 64 * 1024 * 1024;
 const strictUtf8Decoder = new TextDecoder("utf-8", { fatal: true });
 
+function hasParentStep(path: string): boolean {
+  return path.replaceAll("\\", "/").split("/").includes("..");
+}
+
 function readLimitBytes(wikiRoot: string, relativePath: string): number {
-  if (
-    relativePath.split("/").includes("..") ||
-    relativePath.split("\\").includes("..")
-  ) {
+  if (hasParentStep(relativePath)) {
     return 0;
   }
   try {
@@ -99,8 +100,7 @@ export function readRootedTextRequired(
 }
 
 function normalizeWalkFolder(wikiRoot: string, folder: string): string {
-  const segments = folder.replaceAll("\\", "/").split("/");
-  if (segments.includes("..")) {
+  if (hasParentStep(folder)) {
     throw new WikiReadRefusal(folder, "parent-step");
   }
   if (!isAbsolute(folder)) return folder;
