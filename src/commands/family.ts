@@ -1,3 +1,11 @@
+export { checkNote } from "../family/rules.ts";
+export type {
+  Check,
+  CheckNoteOptions,
+  Finding,
+  NoteRules,
+  WikiRuleFinding,
+} from "../family/rules.ts";
 export type {
   Family,
   FamilyField,

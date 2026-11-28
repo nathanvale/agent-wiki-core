@@ -1,3 +1,4 @@
+import { familyCheckFor } from "../family/check.ts";
 import { familyListFor } from "../family/list.ts";
 import { noteCheckFor } from "../note/check.ts";
 import type { NoteCheckOptions } from "../note/check.ts";
@@ -8,7 +9,11 @@ export function wikiCoreFor<const Cli extends string>(
   cli: Cli,
   options: WikiCoreOptions,
 ) {
-  return [noteCheckFor(cli, options), familyListFor(cli)] as const;
+  return [
+    noteCheckFor(cli, options),
+    familyCheckFor(cli),
+    familyListFor(cli),
+  ] as const;
 }
 
 export { notesCauses as wikiCoreCauses } from "../note/causes.ts";
