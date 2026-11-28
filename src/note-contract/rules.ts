@@ -33,6 +33,7 @@ function familyFindings(
   table: FamilyTable,
 ): BaseFieldFinding[] {
   if (note.family === null) {
+    if (table.familyHeader === "from-folder") return [];
     return [
       {
         path: note.path,
@@ -98,7 +99,7 @@ function createdAndSummaryFindings(
   table: FamilyTable,
 ): BaseFieldFinding[] {
   const findings: BaseFieldFinding[] = [];
-  if (note.created === null) {
+  if (table.createdRequired && note.created === null) {
     findings.push({
       path: note.path,
       kind: "created-missing",
@@ -106,11 +107,13 @@ function createdAndSummaryFindings(
     });
   }
   if (note.summary === null) {
-    findings.push({
-      path: note.path,
-      kind: "summary-missing",
-      detail: "Missing or blank summary header field.",
-    });
+    if (table.summaryRequired) {
+      findings.push({
+        path: note.path,
+        kind: "summary-missing",
+        detail: "Missing or blank summary header field.",
+      });
+    }
   } else if (
     table.summaryMaxLength !== null &&
     note.summary.length > table.summaryMaxLength

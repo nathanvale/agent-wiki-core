@@ -1,5 +1,15 @@
 import { folderOf } from "../shared/rules.ts";
 import type { baseFields, Note } from "../shared/rules.ts";
+import {
+  checkNoteNames,
+  checkTableSettings,
+  tableSettingKeys,
+} from "./settings/rules.ts";
+import type {
+  Check,
+  NoteNamesSetting,
+  TableSettings,
+} from "./settings/rules.ts";
 
 export type FamilyField = {
   readonly name: string;
@@ -23,9 +33,10 @@ export type Family = {
   readonly folder: string;
   readonly familyFields: readonly FamilyField[];
   readonly headings: readonly Heading[];
+  readonly noteNames?: NoteNamesSetting;
 };
 
-export type FamilyTable = {
+export type FamilyTable = TableSettings & {
   readonly baseTag: string | null;
   readonly discoveryTags: readonly string[] | null;
   readonly tagLimit: number | null;
@@ -37,11 +48,8 @@ export type FamilyTable = {
   readonly families: readonly Family[];
 };
 
-type Check<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly detail: string };
-
 const tableKeys = new Set([
+  ...tableSettingKeys,
   "baseTag",
   "discoveryTags",
   "tagLimit",
@@ -53,7 +61,13 @@ const tableKeys = new Set([
   "families",
 ]);
 
-const familyKeys = new Set(["family", "folder", "familyFields", "headings"]);
+const familyKeys = new Set([
+  "family",
+  "folder",
+  "familyFields",
+  "headings",
+  "noteNames",
+]);
 const familyFieldKeys = new Set(["name", "value"]);
 const headingKeys = new Set(["name", "hint", "optional"]);
 const renameKeys = new Set(["kind", "from", "to"]);
@@ -302,12 +316,17 @@ function checkFamily(value: unknown, prefix: string): Check<Family> {
   if (!familyFields.ok) return familyFields;
   const headings = checkHeadings(record["headings"], `${prefix}.headings`);
   if (!headings.ok) return headings;
-  return ok({
+  const rawNoteNames = record["noteNames"];
+  const base: Family = {
     family: family.value,
     folder: folder.value,
     familyFields: familyFields.value,
     headings: headings.value,
-  });
+  };
+  if (rawNoteNames === undefined) return ok(base);
+  const noteNames = checkNoteNames(rawNoteNames, `${prefix}.noteNames`);
+  if (!noteNames.ok) return noteNames;
+  return ok({ ...base, noteNames: noteNames.value });
 }
 
 function checkFamilies(value: unknown): Check<readonly Family[]> {
@@ -331,6 +350,8 @@ export function familyTableFrom(
   const unknown = checkAllowedKeys(record, tableKeys, "");
   if (unknown !== null) return { ok: false, detail: unknown };
 
+  const settings = checkTableSettings(record);
+  if (!settings.ok) return settings;
   const baseTag = nullableString(record["baseTag"], "baseTag", null);
   if (!baseTag.ok) return baseTag;
   const discoveryTags = nullableStringList(
@@ -373,6 +394,7 @@ export function familyTableFrom(
   return {
     ok: true,
     table: {
+      ...settings.value,
       baseTag: baseTag.value,
       discoveryTags: discoveryTags.value,
       tagLimit: tagLimit.value,
@@ -385,6 +407,13 @@ export function familyTableFrom(
     },
   };
 }
+
+type FolderPlacement<K extends "family-free" | "unknown-folder"> = {
+  readonly kind: K;
+  readonly folder: string;
+  readonly expectedFamily: null;
+  readonly effectiveFamily: Family | null;
+};
 
 type NotePlacement =
   | {
@@ -399,21 +428,11 @@ type NotePlacement =
       readonly expectedFamily: string;
       readonly effectiveFamily: Family | null;
     }
-  | {
-      readonly kind: "family-free";
-      readonly folder: string;
-      readonly expectedFamily: null;
-      readonly effectiveFamily: Family | null;
-    }
+  | FolderPlacement<"family-free">
+  | FolderPlacement<"unknown-folder">
   | {
       readonly kind: "wiki-folder";
       readonly folder: null;
-      readonly expectedFamily: null;
-      readonly effectiveFamily: Family | null;
-    }
-  | {
-      readonly kind: "unknown-folder";
-      readonly folder: string;
       readonly expectedFamily: null;
       readonly effectiveFamily: Family | null;
     };
@@ -469,18 +488,10 @@ export function placementOf(
       };
     }
   }
-  if (table.familyFreeFolders.includes(folder)) {
-    return {
-      kind: "family-free",
-      folder,
-      expectedFamily: null,
-      effectiveFamily: noteFamily,
-    };
-  }
-  return {
-    kind: "unknown-folder",
-    folder,
-    expectedFamily: null,
-    effectiveFamily: noteFamily,
-  };
+  const kind =
+    table.familyFreeFolders.includes(folder) ||
+    table.undeclaredFolders === "family-free"
+      ? "family-free"
+      : "unknown-folder";
+  return { kind, folder, expectedFamily: null, effectiveFamily: noteFamily };
 }
