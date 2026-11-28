@@ -12,7 +12,6 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import type { Stats } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import {
   asWritten,
@@ -41,6 +40,7 @@ import {
   parseRumdlExcludeGlobs,
 } from "./rumdl-config.ts";
 import type { ExcludeGlobsResult, OwnedFiles } from "./rumdl-config.ts";
+import { ownedFolders, statIfPresent, walkWikiFiles } from "./wiki-walk.ts";
 
 export {
   asWritten,
@@ -89,15 +89,6 @@ export function canonicalWikiRoot(path: string): string {
   }
 }
 
-function statIfPresent(read: () => Stats | undefined): Stats | undefined {
-  try {
-    return read();
-  } catch (error) {
-    if (errorCode(error) === "ENOTDIR") return undefined;
-    throw error;
-  }
-}
-
 export function isWikiRoot(wikiRoot: string): boolean {
   return (
     statIfPresent(() =>
@@ -136,8 +127,6 @@ export function isExecutableFile(path: string): boolean {
 
 export type { OwnedFiles };
 
-const ownedFolders = ["wiki", "templates"] as const;
-
 function excludeGlobsFromConfig(
   configPath: string | undefined,
 ): ExcludeGlobsResult {
@@ -155,42 +144,6 @@ function excludeGlobsFromConfig(
   return parseRumdlExcludeGlobs(configPath, raw);
 }
 
-type Walk = {
-  readonly wikiRoot: string;
-  readonly isExcluded: (wikiRelativePath: string) => boolean;
-  readonly files: string[];
-};
-
-function walkFolder(walk: Walk, folder: string): string | null {
-  const entries = readdirSync(folder, { withFileTypes: true }).sort(
-    (left, right) =>
-      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
-  );
-  for (const entry of entries) {
-    const path = join(folder, entry.name);
-    const wikiRelativePath = relative(walk.wikiRoot, path).replaceAll(
-      "\\",
-      "/",
-    );
-    if (entry.isSymbolicLink()) return wikiRelativePath;
-    if (entry.isDirectory()) {
-      const linked = walkFolder(walk, path);
-      if (linked !== null) return linked;
-    } else if (
-      entry.isFile() &&
-      isRumdlMarkdownName(entry.name) &&
-      !walk.isExcluded(wikiRelativePath)
-    ) {
-      walk.files.push(path);
-    }
-  }
-  return null;
-}
-
-function isRealFolder(path: string): boolean {
-  return lstatSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false;
-}
-
 export function ownedMarkdownFiles(
   wikiRoot: string,
   configPath?: string,
@@ -199,19 +152,10 @@ export function ownedMarkdownFiles(
   if (!excluded.ok) {
     return { kind: "unreadable-settings", reason: excluded.reason };
   }
-  const walk: Walk = {
-    wikiRoot,
+  return walkWikiFiles(wikiRoot, {
     isExcluded: (wikiRelativePath) =>
       excluded.globs.some((glob) => glob.match(wikiRelativePath)),
-    files: [],
-  };
-  for (const folder of ownedFolders) {
-    const path = join(wikiRoot, folder);
-    if (!isRealFolder(path)) continue;
-    const linked = walkFolder(walk, path);
-    if (linked !== null) return { kind: "linked", linkedPath: linked };
-  }
-  return { kind: "listed", files: walk.files };
+  });
 }
 
 function nativeRumdlBinary(repoRoot: string): string | null {
