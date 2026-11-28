@@ -3,6 +3,16 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { alwaysRenderedFields } from "../src/family-table/rules.ts";
 import { headerPattern } from "../src/shared/rules.ts";
+import {
+  expectedDeskVariantTemplate,
+  expectedFieldVariantTemplate,
+  expectedNullBaseTagTemplate,
+  expectedProjectTemplate,
+  expectedTopicTemplate,
+  multiFamilyTable,
+  nullBaseTagTable,
+  variantFamilyTable,
+} from "./support/family-render-fixtures.ts";
 import { familyWikiFixture, runCoreCli } from "./support/family-wiki.ts";
 import { readObject, readString } from "./support/json.ts";
 
@@ -15,108 +25,6 @@ function renderedHeaderFieldNames(templateText: string): readonly string[] {
     .filter((line) => line.length > 0)
     .map((line) => line.slice(0, line.indexOf(":")));
 }
-
-const multiFamilyTable = {
-  baseTag: "example-wiki",
-  discoveryTags: ["travel", "home"],
-  tagLimit: 2,
-  summaryMaxLength: 200,
-  unfiledFolder: "wiki/inbox/",
-  familyFreeFolders: ["wiki/inbox/", "wiki/archive/"],
-  reservedFamilies: { "wiki/areas/": "area" },
-  renames: [],
-  families: [
-    {
-      family: "project",
-      folder: "wiki/projects/",
-      familyFields: [
-        { name: "status", value: "seed" },
-        { name: "updated", value: '"{{date}}"' },
-      ],
-      headings: [
-        {
-          name: "Purpose",
-          hint: "Why this project matters.",
-          optional: false,
-        },
-        {
-          name: "Notes",
-          optional: true,
-        },
-      ],
-    },
-    {
-      family: "topic",
-      folder: "wiki/topics/",
-      familyFields: [{ name: "scope", value: "general" }],
-      headings: [
-        {
-          name: "Summary",
-          hint: "Key points for this topic.",
-          optional: false,
-        },
-      ],
-    },
-  ],
-};
-
-const expectedProjectTemplate = `---
-family: project
-title: "{{title}}"
-summary: ""
-created: "{{date}}"
-tags: [example-wiki]
-status: seed
-updated: "{{date}}"
----
-
-# {{title}}
-
-## Purpose
-
-<!-- Why this project matters. -->
-
-## Notes
-`;
-
-const expectedTopicTemplate = `---
-family: topic
-title: "{{title}}"
-summary: ""
-created: "{{date}}"
-tags: [example-wiki]
-scope: general
----
-
-# {{title}}
-
-## Summary
-
-<!-- Key points for this topic. -->
-`;
-
-const nullBaseTagTable = {
-  families: [
-    {
-      family: "note",
-      folder: "wiki/notes/",
-      headings: [{ name: "Overview", optional: false }],
-    },
-  ],
-};
-
-const expectedNullBaseTagTemplate = `---
-family: note
-title: "{{title}}"
-summary: ""
-created: "{{date}}"
-tags: []
----
-
-# {{title}}
-
-## Overview
-`;
 
 describe("family render --wiki", () => {
   test("prints one template per defined family with exact header order, no type:, family fields as given, and hints only when present", () => {
@@ -181,6 +89,49 @@ describe("family render --wiki", () => {
     ];
     expect(renderedHeaderFieldNames(noteTemplate)).toEqual(expectedBaseFields);
     expect<readonly string[]>(alwaysRenderedFields).toEqual(expectedBaseFields);
+  });
+
+  test("renders one family template per variant and no plain family template, with variant after tags and afterVariants headings last", () => {
+    const wiki = familyWikiFixture({ table: variantFamilyTable });
+    const run = runCoreCli(["family", "render", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(0);
+    expect(run.envelope.result.commandIdentity).toBe(
+      "agent-wiki-core.family.render",
+    );
+    expect(run.envelope.result.causeCode).toBe("SUCCESS_UNCHANGED");
+    expect(run.envelope.result.data).not.toBeNull();
+    if (run.envelope.result.data === null) return;
+
+    const templates = readObject(
+      run.envelope.result.data["familyTemplates"],
+      "familyTemplates",
+      (record) => record,
+    );
+    expect(Object.keys(templates)).toEqual([
+      "templates/study-field.md",
+      "templates/study-desk.md",
+    ]);
+    expect(Object.hasOwn(templates, "templates/study.md")).toBe(false);
+    expect(run.envelope.result.data).toEqual({
+      familyTemplates: {
+        "templates/study-field.md": expectedFieldVariantTemplate,
+        "templates/study-desk.md": expectedDeskVariantTemplate,
+      },
+    });
+    const fieldTemplate = readString(
+      templates["templates/study-field.md"],
+      "familyTemplates[templates/study-field.md]",
+    );
+    expect(renderedHeaderFieldNames(fieldTemplate)).toEqual([
+      "family",
+      "title",
+      "summary",
+      "created",
+      "tags",
+      "variant",
+      "status",
+    ]);
   });
 
   test("refuses with exit 3 and DOMAIN_PRECONDITION_UNMET when family-table.json is missing", () => {
@@ -303,6 +254,70 @@ describe("family drift --wiki", () => {
           path: "templates/stray.md",
           kind: "template-unexpected",
           detail: "Installed template is not declared in family-table.json.",
+        },
+      ],
+    });
+  });
+
+  test("reports zero findings when installed variant family templates match the render", () => {
+    const wiki = familyWikiFixture({
+      table: variantFamilyTable,
+      templates: {
+        "templates/study-field.md": expectedFieldVariantTemplate,
+        "templates/study-desk.md": expectedDeskVariantTemplate,
+      },
+    });
+    const run = runCoreCli(["family", "drift", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(0);
+    expect(run.envelope.result.commandIdentity).toBe(
+      "agent-wiki-core.family.drift",
+    );
+    expect(run.envelope.result.causeCode).toBe("SUCCESS_UNCHANGED");
+    expect(run.envelope.result.data).toEqual({ findings: [] });
+  });
+
+  test("reports template-unexpected when a plain family template exists for a family with variants", () => {
+    const wiki = familyWikiFixture({
+      table: variantFamilyTable,
+      templates: {
+        "templates/study-field.md": expectedFieldVariantTemplate,
+        "templates/study-desk.md": expectedDeskVariantTemplate,
+        "templates/study.md": "# Plain study\n",
+      },
+    });
+    const run = runCoreCli(["family", "drift", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(0);
+    expect(run.envelope.result.causeCode).toBe("SUCCESS_UNCHANGED");
+    expect(run.envelope.result.data).toEqual({
+      findings: [
+        {
+          path: "templates/study.md",
+          kind: "template-unexpected",
+          detail: "Installed template is not declared in family-table.json.",
+        },
+      ],
+    });
+  });
+
+  test("reports template-missing when one variant family template is absent", () => {
+    const wiki = familyWikiFixture({
+      table: variantFamilyTable,
+      templates: {
+        "templates/study-field.md": expectedFieldVariantTemplate,
+      },
+    });
+    const run = runCoreCli(["family", "drift", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(0);
+    expect(run.envelope.result.causeCode).toBe("SUCCESS_UNCHANGED");
+    expect(run.envelope.result.data).toEqual({
+      findings: [
+        {
+          path: "templates/study-desk.md",
+          kind: "template-missing",
+          detail: "Installed family template is missing.",
         },
       ],
     });

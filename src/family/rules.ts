@@ -1,5 +1,5 @@
 import { alwaysRenderedFields, placementOf } from "../family-table/rules.ts";
-import type { Family, FamilyTable } from "../family-table/rules.ts";
+import type { Family, FamilyTable, Variant } from "../family-table/rules.ts";
 import { baseFieldFindings } from "../note-contract/rules.ts";
 import { rawSectionsOf } from "../shared/rules.ts";
 import type { Note } from "../shared/rules.ts";
@@ -169,7 +169,11 @@ export type TemplateDriftFinding = {
   readonly detail: string;
 };
 
-function renderFamilyTemplate(family: Family, baseTag: string | null): string {
+function renderFamilyTemplate(
+  family: Family,
+  baseTag: string | null,
+  variant?: Variant,
+): string {
   const baseFieldValues: Record<(typeof alwaysRenderedFields)[number], string> =
     {
       family: family.family,
@@ -178,13 +182,31 @@ function renderFamilyTemplate(family: Family, baseTag: string | null): string {
       created: '"{{date}}"',
       tags: `[${baseTag === null ? "" : baseTag}]`,
     };
+  const baseHeaderLines = alwaysRenderedFields.flatMap((name) => {
+    const line = `${name}: ${baseFieldValues[name]}`;
+    return name === "tags" && variant !== undefined
+      ? [line, `variant: ${variant.name}`]
+      : [line];
+  });
   const headerLines = [
     "---",
-    ...alwaysRenderedFields.map((name) => `${name}: ${baseFieldValues[name]}`),
+    ...baseHeaderLines,
     ...family.familyFields.map((field) => `${field.name}: ${field.value}`),
     "---",
   ];
-  const sections = family.headings.map((heading) =>
+  const orderedHeadings =
+    variant === undefined
+      ? family.headings
+      : [
+          ...family.headings.filter(
+            (heading) => heading.afterVariants !== true,
+          ),
+          ...variant.headings,
+          ...family.headings.filter(
+            (heading) => heading.afterVariants === true,
+          ),
+        ];
+  const sections = orderedHeadings.map((heading) =>
     heading.hint === undefined || heading.hint.trim() === ""
       ? `## ${heading.name}`
       : `## ${heading.name}\n\n<!-- ${heading.hint} -->`,
@@ -198,10 +220,17 @@ export function renderFamilyTemplates(
 ): Readonly<Record<string, string>> {
   const templates: Record<string, string> = {};
   for (const family of table.families) {
-    templates[`templates/${family.family}.md`] = renderFamilyTemplate(
-      family,
-      table.baseTag,
-    );
+    if (family.variants === undefined) {
+      templates[`templates/${family.family}.md`] = renderFamilyTemplate(
+        family,
+        table.baseTag,
+      );
+      continue;
+    }
+    for (const variant of family.variants) {
+      templates[`templates/${family.family}-${variant.name}.md`] =
+        renderFamilyTemplate(family, table.baseTag, variant);
+    }
   }
   return templates;
 }
