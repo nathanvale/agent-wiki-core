@@ -17,6 +17,7 @@ const prototypeTable = {
   unfiledFolder: "wiki/inbox/",
   familyFreeFolders: ["wiki/inbox/", "wiki/archive/"],
   reservedFamilies: { "wiki/areas/": "area" },
+  noteNames: "any",
   families: [
     {
       family: "decision",
@@ -229,7 +230,7 @@ describe("family check --wiki (AC-01 combined checks)", () => {
         ],
       },
       notes: {
-        "wiki/projects/any-tags.md": projectNote({
+        "wiki/projects/sample-note.md": projectNote({
           tags: ["anything", "else"],
         }),
       },
@@ -255,7 +256,7 @@ describe("family check --wiki (AC-01 combined checks)", () => {
         ],
       },
       notes: {
-        "wiki/projects/loose.md": projectNote({
+        "wiki/projects/sample-note.md": projectNote({
           tags: ["a", "b", "c", "d"],
           summary: "x".repeat(300),
         }),
@@ -421,7 +422,7 @@ describe("family check --wiki (AC-02 five placement rows)", () => {
     expect(run.findings[1]?.detail).toContain("Answer");
   });
 
-  test("reserved folder accepts its reserved family and subfolders belong to their family folder", () => {
+  test("reserved folder accepts its reserved family and subfolders report note-in-subfolder", () => {
     const wiki = familyWikiFixture({
       table: prototypeTable,
       notes: {
@@ -436,7 +437,9 @@ describe("family check --wiki (AC-02 five placement rows)", () => {
 
     expect(run.exitCode).toBe(0);
     expect(run.notes).toBe(2);
-    expect(run.findings).toEqual([]);
+    expect(summary(run.findings)).toEqual([
+      "wiki/projects/nested/deep.md|note-name|note-in-subfolder",
+    ]);
   });
 
   test("agent-wiki-core/family exports checkNote with Check, Finding, and NoteRules types", () => {

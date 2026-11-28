@@ -13,6 +13,7 @@ const fixtureTable = {
   unfiledFolder: "wiki/inbox/",
   familyFreeFolders: ["wiki/inbox/", "wiki/archive/"],
   reservedFamilies: { "wiki/areas/": "area" },
+  noteNames: "any",
   families: [
     {
       family: "decision",

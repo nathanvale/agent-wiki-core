@@ -1,10 +1,14 @@
 import { alwaysRenderedFields, placementOf } from "../family-table/rules.ts";
 import type { Family, FamilyTable } from "../family-table/rules.ts";
 import { baseFieldFindings } from "../note-contract/rules.ts";
+import {
+  crossRecordNoteNameFindings,
+  noteNameFindings,
+} from "../note-name/rules.ts";
 import { rawSectionsOf } from "../shared/rules.ts";
 import type { Note } from "../shared/rules.ts";
 
-export type Check = "base-fields" | "heading-rule" | "wiki-rule";
+export type Check = "base-fields" | "heading-rule" | "note-name" | "wiki-rule";
 
 type HeadingRuleFinding = {
   readonly path: string;
@@ -93,6 +97,10 @@ export function checkNote(
       ...finding,
       check: "heading-rule" as const,
     })),
+    ...noteNameFindings(note, table).map((finding) => ({
+      ...finding,
+      check: "note-name" as const,
+    })),
   ];
 
   if (options?.noteRules !== undefined) {
@@ -112,11 +120,17 @@ export function checkRecords(
   options?: FamilyCheckOptions,
 ): Finding[] {
   const perNote = records.flatMap((note) => checkNote(note, table, options));
-  if (options?.crossRecordRules === undefined) return perNote;
-  return [
-    ...perNote,
-    ...tagWikiRuleFindings(options.crossRecordRules(records, table)),
-  ];
+  const crossNoteName = crossRecordNoteNameFindings(records, table).map(
+    (finding) => ({
+      ...finding,
+      check: "note-name" as const,
+    }),
+  );
+  const crossWiki =
+    options?.crossRecordRules === undefined
+      ? []
+      : tagWikiRuleFindings(options.crossRecordRules(records, table));
+  return [...perNote, ...crossNoteName, ...crossWiki];
 }
 
 export type InstalledFamilyTemplate = {

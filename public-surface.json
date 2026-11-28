@@ -1388,6 +1388,12 @@
       "checkNote": "value",
       "readFamilyTable": "value"
     },
+    "./note-name": {
+      "expectedNotePath": "value",
+      "firstHeading": "value",
+      "noteTitle": "value",
+      "slugFromTitle": "value"
+    },
     "./notes": {
       "MarkdownFile": "type",
       "MarkdownSection": "type",

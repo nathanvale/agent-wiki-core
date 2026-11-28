@@ -50,12 +50,73 @@ export function bodyOf(note: { readonly text: string }): string {
   return note.text.replace(headerPattern, "");
 }
 
-function nextFence(fence: string | null, line: string): string | null {
+export function nextFence(fence: string | null, line: string): string | null {
   const match = /^(```|~~~)/.exec(line);
   if (match === null) return fence;
   const marker = match[1] ?? "";
   if (fence === null) return marker;
   return fence === marker ? null : fence;
+}
+
+const namedHtmlEntities: Readonly<Record<string, string>> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  mdash: "\u2014",
+  ndash: "\u2013",
+  rsquo: "\u2019",
+  lsquo: "\u2018",
+  rdquo: "\u201d",
+  ldquo: "\u201c",
+  hellip: "\u2026",
+};
+
+function decodeCodePoint(raw: string, radix: 10 | 16): string | null {
+  const codePoint = Number.parseInt(raw, radix);
+  if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10ffff) {
+    return null;
+  }
+  return String.fromCodePoint(codePoint);
+}
+
+function decodeEntities(text: string): string {
+  return text.replace(
+    /&(?:#x([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z]+));/g,
+    (
+      match,
+      hex: string | undefined,
+      dec: string | undefined,
+      name: string | undefined,
+    ) => {
+      if (hex !== undefined) return decodeCodePoint(hex, 16) ?? match;
+      if (dec !== undefined) return decodeCodePoint(dec, 10) ?? match;
+      if (name !== undefined) {
+        return namedHtmlEntities[name.toLowerCase()] ?? match;
+      }
+      return match;
+    },
+  );
+}
+
+export function inertMarkup(text: string): string {
+  return decodeEntities(
+    text
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/\[\[[^\]|]+\|([^\]]+)\]\]/g, "$1")
+      .replace(/\[\[([^\]]+)\]\]/g, "$1")
+      .replace(/`([^`]*)`/g, "$1")
+      .replace(/<[^>]+>/g, "")
+      .replace(/(\*\*|__|~~)(.*?)\1/g, "$2")
+      .replace(/\*([^*]+)\*/g, "$1")
+      .replace(/(^|[^\w])_([^_]+)_(?=$|[^\w])/g, "$1$2")
+      .replace(/\\([\\`*_{}[\]()#+\-.!~|])/g, "$1"),
+  )
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function splitMarkdownSections(
