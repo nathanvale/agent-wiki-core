@@ -2,7 +2,12 @@ import { describe, expect, test } from "bun:test";
 import { checkNote, readFamilyTable } from "agent-wiki-core/family";
 import type { Check, Finding, NoteRules } from "agent-wiki-core/family";
 import { parseNote } from "agent-wiki-core/notes";
-import { familyWikiFixture, runCoreCli } from "./support/family-wiki.ts";
+import {
+  familyWikiFixture,
+  readFamilyCheckRun,
+  runCoreCli,
+} from "./support/family-wiki.ts";
+import type { ObservedFinding } from "./support/family-wiki.ts";
 
 const prototypeTable = {
   baseTag: "example-wiki",
@@ -92,39 +97,8 @@ function projectNote(overrides: NoteOptions = {}): string {
   );
 }
 
-type ObservedFinding = {
-  readonly path: string;
-  readonly check: string;
-  readonly kind: string;
-  readonly detail: string;
-};
-
 function runFamilyCheck(wiki: string) {
-  const run = runCoreCli(["family", "check", "--wiki", wiki]);
-  const data = run.envelope.result.data;
-  const notes =
-    data !== null && typeof data["notes"] === "number" ? data["notes"] : -1;
-  const raw =
-    data !== null && Array.isArray(data["findings"]) ? data["findings"] : [];
-  const findings: ObservedFinding[] = raw.map((item: unknown) => {
-    if (typeof item !== "object" || item === null)
-      throw new Error("Expected finding object.");
-    const record = Object.fromEntries(Object.entries(item));
-    return {
-      path: String(record["path"]),
-      check: String(record["check"]),
-      kind: String(record["kind"]),
-      detail: String(record["detail"]),
-    };
-  });
-  return {
-    exitCode: run.exitCode,
-    causeCode: run.envelope.result.causeCode,
-    commandIdentity: run.envelope.result.commandIdentity,
-    message: run.envelope.message,
-    notes,
-    findings,
-  };
+  return readFamilyCheckRun(runCoreCli(["family", "check", "--wiki", wiki]));
 }
 
 function summary(findings: readonly ObservedFinding[]) {

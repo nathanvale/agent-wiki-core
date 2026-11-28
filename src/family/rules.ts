@@ -24,8 +24,17 @@ export type NoteRules = (
   table: FamilyTable,
 ) => readonly WikiRuleFinding[];
 
+export type CrossRecordRules = (
+  records: readonly Note[],
+  table: FamilyTable,
+) => readonly WikiRuleFinding[];
+
 export type CheckNoteOptions = {
   readonly noteRules?: NoteRules;
+};
+
+export type FamilyCheckOptions = CheckNoteOptions & {
+  readonly crossRecordRules?: CrossRecordRules;
 };
 
 export type Finding = {
@@ -60,6 +69,13 @@ function headingRuleFindings(
   return findings;
 }
 
+function tagWikiRuleFindings(findings: readonly WikiRuleFinding[]): Finding[] {
+  return findings.map((finding) => ({
+    ...finding,
+    check: "wiki-rule",
+  }));
+}
+
 export function checkNote(
   note: Note,
   table: FamilyTable,
@@ -80,17 +96,25 @@ export function checkNote(
   ];
 
   if (options?.noteRules !== undefined) {
-    for (const finding of options.noteRules(
-      note,
-      placement.effectiveFamily,
-      table,
-    )) {
-      findings.push({
-        ...finding,
-        check: "wiki-rule",
-      });
-    }
+    findings.push(
+      ...tagWikiRuleFindings(
+        options.noteRules(note, placement.effectiveFamily, table),
+      ),
+    );
   }
 
   return findings;
+}
+
+export function checkRecords(
+  records: readonly Note[],
+  table: FamilyTable,
+  options?: FamilyCheckOptions,
+): Finding[] {
+  const perNote = records.flatMap((note) => checkNote(note, table, options));
+  if (options?.crossRecordRules === undefined) return perNote;
+  return [
+    ...perNote,
+    ...tagWikiRuleFindings(options.crossRecordRules(records, table)),
+  ];
 }
