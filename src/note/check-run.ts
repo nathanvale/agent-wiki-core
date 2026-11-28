@@ -7,12 +7,11 @@ import type {
   ProgramsCapability,
 } from "agent-cli-kernel";
 import {
-  hasLinkedTemplatesFolder,
   isFile,
-  isWikiRoot,
   ownedMarkdownFiles,
   resolvePinnedRumdl,
 } from "../shared/markdown-files.ts";
+import { wikiRootRefusal } from "../shared/wiki-walk.ts";
 import { canonicalRouteNames } from "../shared/rules.ts";
 import type { NotesFindingGroupCause } from "./rules.ts";
 import {
@@ -159,21 +158,13 @@ function buildCheckOutcome(options: {
 export async function runNoteCheck(
   request: NoteCheckContext,
 ): Promise<NoteCheckOutcome> {
-  if (!isWikiRoot(request.wikiRoot)) {
+  const rootProblem = wikiRootRefusal(request.wikiRoot);
+  if (rootProblem !== null) {
     return {
       kind: "refused",
       causeCode:
         "DOMAIN_PRECONDITION_UNMET" satisfies keyof typeof commonCauses,
-      message:
-        "That path is not a wiki root: it has no wiki/ folder inside it.",
-    };
-  }
-  if (hasLinkedTemplatesFolder(request.wikiRoot)) {
-    return {
-      kind: "refused",
-      causeCode:
-        "DOMAIN_PRECONDITION_UNMET" satisfies keyof typeof commonCauses,
-      message: `The templates/ folder in that wiki root is a symlink, and ${canonicalRouteNames.noteCheck} does not follow a linked folder, just as it refuses a linked wiki/ folder. Repair: Replace templates/ with a real folder that holds the family templates, then run ${canonicalRouteNames.noteCheck} again.`,
+      message: rootProblem,
     };
   }
   const configPath =
@@ -238,6 +229,14 @@ export async function runNoteCheck(
       causeCode:
         "DOMAIN_PRECONDITION_UNMET" satisfies keyof typeof commonCauses,
       message: `${owned.linkedPath} is a symlink inside the wiki root, and ${canonicalRouteNames.noteCheck} does not follow a link under wiki/ or templates/, so what it points at would go unchecked. Repair: Replace ${owned.linkedPath} with the real file or folder it points at, or remove it, then run ${canonicalRouteNames.noteCheck} again.`,
+    };
+  }
+  if (owned.kind === "special-file") {
+    return {
+      kind: "refused",
+      causeCode:
+        "DOMAIN_PRECONDITION_UNMET" satisfies keyof typeof commonCauses,
+      message: `${owned.path} is a ${owned.entryKind} inside the wiki root, and ${canonicalRouteNames.noteCheck} only reads regular Markdown files under wiki/ and templates/. Repair: Remove ${owned.path} or replace it with a regular Markdown file, then run ${canonicalRouteNames.noteCheck} again.`,
     };
   }
   const executed = await runRumdlCheck({
