@@ -58,7 +58,7 @@ export function refused(message: string) {
   return { message, data: null, effects: unchanged } as const;
 }
 
-export const noWikiRoot = refused(
+const missingWikiRootOption = refused(
   "That path is not a wiki root: it has no wiki/ folder inside it.",
 );
 
@@ -66,6 +66,58 @@ function wikiReadRefusalBody(error: WikiReadRefusal) {
   return refused(
     `${error.path} cannot be read (${error.reason}). Repair: remove or replace the named entry, then run the command again.`,
   );
+}
+
+type WikiRefusalBody = ReturnType<typeof refused>;
+
+type WikiRootOutcome<T> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly refusal: WikiRefusalBody };
+
+function mapReadRefusal(error: unknown): {
+  readonly ok: false;
+  readonly refusal: WikiRefusalBody;
+} {
+  if (error instanceof WikiReadRefusal) {
+    return { ok: false, refusal: wikiReadRefusalBody(error) };
+  }
+  throw error;
+}
+
+export function withWikiRoot<T>(
+  wikiRoot: string,
+  read: (wikiRoot: string) => Promise<T>,
+): Promise<WikiRootOutcome<T>>;
+export function withWikiRoot<T>(
+  wikiRoot: string,
+  read: (wikiRoot: string) => T,
+): WikiRootOutcome<T>;
+export function withWikiRoot(
+  wikiRoot: string,
+  read: (wikiRoot: string) => unknown,
+): WikiRootOutcome<unknown> | Promise<WikiRootOutcome<unknown>> {
+  const isAsync = read.constructor.name === "AsyncFunction";
+  const resolvedRoot = resolve(wikiRoot);
+  const rootProblem = wikiRootRefusal(resolvedRoot);
+  if (rootProblem !== null) {
+    const failure: WikiRootOutcome<never> = {
+      ok: false,
+      refusal: refused(rootProblem),
+    };
+    return isAsync ? Promise.resolve(failure) : failure;
+  }
+  try {
+    const result = read(resolvedRoot);
+    if (result instanceof Promise) {
+      return Promise.resolve<unknown>(result).then(
+        (value): WikiRootOutcome<unknown> => ({ ok: true, value }),
+        mapReadRefusal,
+      );
+    }
+    return { ok: true, value: result };
+  } catch (error) {
+    return mapReadRefusal(error);
+  }
 }
 
 const stationWords = {
@@ -173,34 +225,26 @@ export function wikiReadCommand<
         ? Reflect.get(parsed, "--wiki")
         : undefined;
       if (typeof rawWiki !== "string")
-        return context.result(preconditionUnmet(spec.identity), noWikiRoot);
-      const wikiRoot = resolve(rawWiki);
-      const rootProblem = wikiRootRefusal(wikiRoot);
-      if (rootProblem !== null)
         return context.result(
           preconditionUnmet(spec.identity),
-          refused(rootProblem),
+          missingWikiRootOption,
         );
-      let outcome: WikiReadAnswer;
-      try {
-        outcome = answer(wikiRoot, parsed);
-      } catch (error) {
-        if (error instanceof WikiReadRefusal) {
-          return context.result(
-            preconditionUnmet(spec.identity),
-            wikiReadRefusalBody(error),
-          );
-        }
-        throw error;
-      }
-      if (outcome.kind === "refused")
+      const outcome = withWikiRoot(rawWiki, (wikiRoot) =>
+        answer(wikiRoot, parsed),
+      );
+      if (!outcome.ok)
         return context.result(
           preconditionUnmet(spec.identity),
-          refused(outcome.message),
+          outcome.refusal,
+        );
+      if (outcome.value.kind === "refused")
+        return context.result(
+          preconditionUnmet(spec.identity),
+          refused(outcome.value.message),
         );
       return context.result(
         succeeded(spec.identity),
-        report(outcome.message, outcome.data),
+        report(outcome.value.message, outcome.value.data),
       );
     },
   });

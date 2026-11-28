@@ -1354,7 +1354,6 @@
       "WikiCoreOptions": "type",
       "WikiRuleFinding": "type",
       "noInput": "value",
-      "noWikiRoot": "value",
       "preconditionUnmet": "value",
       "programPath": "value",
       "refused": "value",
@@ -1367,7 +1366,8 @@
       "wikiInput": "value",
       "wikiOption": "value",
       "wikiReadCommand": "value",
-      "wikiStations": "value"
+      "wikiStations": "value",
+      "withWikiRoot": "value"
     },
     "./consumer-guard": {
       "InstallFinding": "type",
