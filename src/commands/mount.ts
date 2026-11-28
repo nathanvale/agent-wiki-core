@@ -1,3 +1,4 @@
+import { familyCheckFor } from "../family/check.ts";
 import { familyDriftFor } from "../family/drift.ts";
 import { familyListFor } from "../family/list.ts";
 import { familyRenderFor } from "../family/render.ts";
@@ -12,6 +13,7 @@ export function wikiCoreFor<const Cli extends string>(
 ) {
   return [
     noteCheckFor(cli, options),
+    familyCheckFor(cli),
     familyDriftFor(cli),
     familyListFor(cli),
     familyRenderFor(cli),
