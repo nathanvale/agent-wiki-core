@@ -49,6 +49,7 @@ term that owns it, as `template` does in `FamilyTemplate`.
 | Family table        | `src/family-table/`, with the reader in `src/shared/family-table.ts` | `FamilyTable`, `FamilyField`, `readFamilyTable`                      |
 | Record family       | `src/family/`                                                       | routes `family check`, `family drift`, `family list`, `family render` |
 | Record check        | inside `src/family/`                                                | `checkNote`, `Finding`                                               |
+| Variant             | inside `src/family/`                                                | `variants`, `afterVariants`, kinds `variant-missing`, `variant-not-installed` |
 | Contacts capability | `src/contacts/`                 | capability name `contacts`                            |
 | Contact adapter     | `src/contacts/adapters/`        | one file per adapter prefix; type `ContactAdapter`    |
 | Resolution          | inside `src/contacts/`          | type `Resolution`: `found`, `missing`, `unavailable`  |

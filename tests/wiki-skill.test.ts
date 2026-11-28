@@ -97,6 +97,14 @@ test("the notes-and-families reference covers base fields, required headings, ta
   expect(reference).toMatch(/```markdown[\s\S]*?^## /m);
 });
 
+test("the notes-and-families reference names Variant, afterVariants and variant-missing", () => {
+  const reference = readFileSync(notesAndFamiliesPath, "utf8");
+
+  expect(reference).toContain("Variant");
+  expect(reference).toContain("afterVariants");
+  expect(reference).toContain("variant-missing");
+});
+
 test("the shipped pointer matches the full wiki skill front matter and points in prose", () => {
   const fullSkill = readSkill(fullSkillPath);
   const shippedPointer = readSkill(shippedPointerPath);
