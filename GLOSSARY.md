@@ -144,7 +144,8 @@ Another name a reader might use to look for a record.
 
 **Status**:
 Where a record is in its life: seed while it is being planned, active while
-it is happening, archived once it is done or dropped.
+it is happening, archived once it is done or dropped. It is a family field
+that the core's example families carry, not a base field.
 _Avoid_: stage, state (for a record)
 
 **Fingerprint**:
@@ -161,8 +162,9 @@ _Avoid_: type, category, taxonomy; kind (for a family: a finding has a kind)
 
 **Family table**:
 A consumer wiki's one table that defines every record family, the reserved
-families, the family-free folders, the base tag, the discovery tags and the
-accepted renames. The wiki core reads it; each consumer writes its own.
+families, the family-free folders, the base tag, the discovery tags, the tag
+limit and the accepted renames. It is the file `family-table.json` in the
+wiki root. The wiki core reads it; each consumer writes its own.
 _Avoid_: schema (the note contract is the schema), registry
 
 **Family folder**:
@@ -189,7 +191,8 @@ repositories)
 
 **Heading rule**:
 The record of which headings a family's records carry, in what order, and
-which may be left out when empty.
+which may be left out when empty. The family table holds it. The headings it
+does not mark optional are the family's required headings.
 _Avoid_: heading template, outline
 
 **Base tag**:
@@ -199,6 +202,10 @@ The tag every record carries.
 A tag that says where a reader might look. One discovery tag can cross
 families.
 _Avoid_: label, category
+
+**Tag limit**:
+The most tags one note may carry, the base tag included, as the family table
+sets it.
 
 **Accepted rename**:
 A change of a family name, a family folder or a heading that a wiki's owner
@@ -220,13 +227,17 @@ rules and the wiki skill's field text all come from it.
 _Avoid_: schema (unqualified), spec, front matter rules
 
 **Base field**:
-A header field that every filed note carries, whatever its family. The
+A header field of the note contract that the wiki core reads on every note,
+whatever its family. `family`, `summary`, `created` and `tags` are required;
+`title`, `aliases`, `record_id` and `replaced_by` are understood when
+present. Every family template carries the required ones and `title`. The
 created date is one.
 _Avoid_: required field (a family field can be required too), core field
 
 **Family field**:
 A header field that the notes of one record family carry on top of the base
-fields. A consumer wiki's family table names them.
+fields. A consumer wiki's family table names them. The family table gives
+each one the value a new family template starts with.
 _Avoid_: extra, custom field
 
 **Created date**:
@@ -308,7 +319,8 @@ _Avoid_: contact sync, contact import
 ### What a check reports
 
 **Finding**:
-One thing a check reports about one path, with a kind and a detail.
+One thing a check reports about one path, with a kind and a detail. A
+finding of a record check also names the check that reported it.
 _Avoid_: issue, problem, violation, error
 
 **Note check**:
@@ -338,11 +350,14 @@ _Avoid_: broken link (the target can exist on this machine), external link
 
 **Record check**:
 Every rule about one record on its own: its folder, family, tags, headings,
-title, summary, links and body.
+title, summary, links and body. It is made of independent checks, each named
+on its findings: base fields, heading rule and wiki rules. A record's
+findings are every check's findings together; no check removes another's
+requirement.
 
 **Drift**:
-A finding that an installed family template or heading rule differs from the
-family table.
+A finding that an installed family template differs from the family table's
+render.
 
 **Planned change**:
 One change that an accepted rename would make to a wiki. Planning it changes

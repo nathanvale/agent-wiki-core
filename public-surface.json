@@ -1439,5 +1439,9 @@
     "WIKI_RUMDL_CONFIG_PATH",
     "WIKI_RUMDL_PATH"
   ],
-  "skills": ["skills/wiki/SKILL.md", "skills/wiki/pointer/SKILL.md"]
+  "skills": [
+    "skills/wiki/SKILL.md",
+    "skills/wiki/pointer/SKILL.md",
+    "skills/wiki/references/notes-and-families.md"
+  ]
 }
