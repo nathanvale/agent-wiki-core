@@ -4,6 +4,13 @@ import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
 const fullSkillPath = join(root, "skills", "wiki", "SKILL.md");
+const notesAndFamiliesPath = join(
+  root,
+  "skills",
+  "wiki",
+  "references",
+  "notes-and-families.md",
+);
 const shippedPointerPath = join(root, "skills", "wiki", "pointer", "SKILL.md");
 const installedFullSkillPath =
   "node_modules/agent-wiki-core/skills/wiki/SKILL.md";
@@ -44,7 +51,18 @@ function namedRoutes(body: string): string[] {
   return [...found];
 }
 
-test("the full wiki skill has exactly three numbered steps and names only note check", () => {
+function referencedFiles(body: string): string[] {
+  const found = new Set<string>();
+  for (const match of body.matchAll(/\[[^\]]+\]\((references\/[^)\s]+)\)/g)) {
+    const target = match[1] ?? "";
+    if (target !== "") {
+      found.add(target);
+    }
+  }
+  return [...found];
+}
+
+test("the full wiki skill has three numbered steps, routes to notes-and-families and names only note check and family list --wiki", () => {
   const fullSkill = readSkill(fullSkillPath);
   const steps = numberedSteps(fullSkill.body);
 
@@ -55,7 +73,28 @@ test("the full wiki skill has exactly three numbered steps and names only note c
   expect(steps[1]).toContain("route");
   expect(steps[1]).toMatch(/stop and report.*missing route/i);
   expect(steps[2]).toContain("note check");
-  expect(namedRoutes(fullSkill.body)).toEqual(["note check"]);
+  expect(namedRoutes(fullSkill.body).toSorted()).toEqual([
+    "family list --wiki",
+    "note check",
+  ]);
+  expect(referencedFiles(fullSkill.body)).toEqual([
+    "references/notes-and-families.md",
+  ]);
+});
+
+test("the notes-and-families reference covers base fields, required headings, table ownership, family list, tag limit and a worked example", () => {
+  const reference = readFileSync(notesAndFamiliesPath, "utf8");
+
+  expect(reference).toContain("family list --wiki");
+  expect(reference).toMatch(/base fields?/i);
+  expect(reference).toMatch(/required headings?/i);
+  expect(reference).toContain("family-table.json");
+  expect(reference).toMatch(/tag limit/i);
+  for (const field of ["family", "title", "summary", "created", "tags"]) {
+    expect(reference).toContain(`\`${field}\``);
+  }
+  expect(reference).toMatch(/```markdown[\s\S]*?^family:/m);
+  expect(reference).toMatch(/```markdown[\s\S]*?^## /m);
 });
 
 test("the shipped pointer matches the full wiki skill front matter and points in prose", () => {
