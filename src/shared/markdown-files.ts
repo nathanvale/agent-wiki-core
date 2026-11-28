@@ -13,23 +13,8 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import {
-  asWritten,
-  bodyOf,
-  folderOf,
-  normalized,
-  parseHeader,
-  parseNote,
-  rawSectionsOf,
-  sectionBodies,
-  sectionsOf,
-  splitMarkdownSections,
-} from "./markdown-sections.ts";
-import type {
-  MarkdownFile,
-  MarkdownSection,
-  Note,
-} from "./markdown-sections.ts";
+import { folderOf, parseNote } from "./markdown-sections.ts";
+import type { MarkdownFile, Note } from "./markdown-sections.ts";
 import { sha256Bytes, stagePathForMove } from "./note-hashes.ts";
 import type { MoveSnapshot } from "./note-hashes.ts";
 import {
@@ -41,20 +26,6 @@ import {
 } from "./rumdl-config.ts";
 import type { ExcludeGlobsResult, OwnedFiles } from "./rumdl-config.ts";
 import { ownedFolders, statIfPresent, walkWikiFiles } from "./wiki-walk.ts";
-
-export {
-  asWritten,
-  bodyOf,
-  folderOf,
-  normalized,
-  parseHeader,
-  parseNote,
-  rawSectionsOf,
-  sectionBodies,
-  sectionsOf,
-  splitMarkdownSections,
-};
-export type { MarkdownFile, MarkdownSection, Note };
 
 export type FamilyTemplateFile = {
   readonly path: string;
@@ -106,15 +77,7 @@ export function isFile(path: string): boolean {
   );
 }
 
-export function hasLinkedTemplatesFolder(wikiRoot: string): boolean {
-  return (
-    lstatSync(join(wikiRoot, "templates"), {
-      throwIfNoEntry: false,
-    })?.isSymbolicLink() ?? false
-  );
-}
-
-export function isExecutableFile(path: string): boolean {
+function isExecutableFile(path: string): boolean {
   const info = statIfPresent(() => statSync(path, { throwIfNoEntry: false }));
   if (info === undefined || !info.isFile()) return false;
   try {
@@ -124,8 +87,6 @@ export function isExecutableFile(path: string): boolean {
     return false;
   }
 }
-
-export type { OwnedFiles };
 
 function excludeGlobsFromConfig(
   configPath: string | undefined,

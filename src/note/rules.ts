@@ -1,5 +1,4 @@
 import { dirname, relative, resolve } from "node:path";
-import { canonicalRouteNames } from "../shared/rules.ts";
 
 export const pinnedRumdlVersion = "0.3.5";
 
@@ -70,7 +69,8 @@ const linkRules: Readonly<Record<string, string>> = {
   MD034:
     "Wrap bare URLs in Markdown link syntax [label](url) or angle brackets.",
   MD039: "Remove leading or trailing spaces inside the link text brackets.",
-  MD042: `Fill in the empty link target by pointing at an existing record with ${canonicalRouteNames.recordFind}, or remove the link.`,
+  MD042:
+    "Fill in the empty link target by pointing it at an existing note, or remove the link.",
   MD045: "Add descriptive alternate text inside the image brackets.",
   MD051:
     "Point the link fragment at a heading that exists in the target note, or remove the fragment.",
@@ -78,7 +78,8 @@ const linkRules: Readonly<Record<string, string>> = {
     "Define the missing reference link target or replace it with a direct relative link.",
   MD053: "Remove the unused link or image reference definition.",
   MD054: "Use inline Markdown links consistently across the note.",
-  MD057: `A note links to a file that is not in this wiki: point it at an existing record with ${canonicalRouteNames.recordFind}, or remove the link.`,
+  MD057:
+    "A note links to a file that is not in this wiki: point it at an existing note, or remove the link.",
   MD059:
     "Replace generic link text with words that name the linked record or source.",
   MD062: "Remove leading or trailing spaces inside the link destination.",

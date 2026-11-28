@@ -4,7 +4,7 @@ export function fieldsOf(value: unknown): Record<string, unknown> | null {
   return isMap ? Object.fromEntries(Object.entries(value)) : null;
 }
 
-export function nonEmpty(value: unknown): string | null {
+function nonEmpty(value: unknown): string | null {
   return typeof value === "string" && value !== "" ? value : null;
 }
 
@@ -24,11 +24,11 @@ export function unixLineEndings(text: string): string {
   return text.replaceAll("\r\n", "\n");
 }
 
-export function utcDay(date: Date): string {
+function utcDay(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-export function isoDate(value: unknown): string | null {
+function isoDate(value: unknown): string | null {
   const date = nonEmpty(value);
   if (date === null || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const real = new Date(`${date}T00:00:00Z`);
