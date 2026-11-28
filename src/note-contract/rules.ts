@@ -131,7 +131,7 @@ export function baseFieldFindings(
   const placement = placementOf(note, table);
   if (placement.kind === "unfiled") return [];
 
-  if (placement.kind === "wiki-root") {
+  if (placement.kind === "wiki-folder") {
     return [
       {
         path: note.path,

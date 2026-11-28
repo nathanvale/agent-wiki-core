@@ -398,7 +398,7 @@ type NotePlacement =
       readonly effectiveFamily: Family | null;
     }
   | {
-      readonly kind: "wiki-root";
+      readonly kind: "wiki-folder";
       readonly folder: null;
       readonly expectedFamily: null;
       readonly effectiveFamily: Family | null;
@@ -434,7 +434,7 @@ export function placementOf(
   const noteFamily = definedFamily(note.family, table);
   if (folder === null) {
     return {
-      kind: "wiki-root",
+      kind: "wiki-folder",
       folder: null,
       expectedFamily: null,
       effectiveFamily: noteFamily,
@@ -457,7 +457,7 @@ export function placementOf(
         kind: "family-folder",
         folder,
         expectedFamily: reserved,
-        effectiveFamily: noteFamily,
+        effectiveFamily: noteFamily ?? definedFamily(reserved, table),
       };
     }
   }

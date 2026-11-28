@@ -403,13 +403,26 @@ describe("family check --wiki (AC-02 five placement rows)", () => {
   test("undeclared folder gives unknown-folder plus tag, summary, created and heading rules", () => {
     const wiki = familyWikiFixture({
       table: prototypeTable,
-      notes: { "wiki/misc/loose.md": projectNote() },
+      notes: {
+        "wiki/misc/loose.md": projectNote(),
+        "wiki/misc/broken.md": projectNote({
+          tags: [],
+          created: null,
+          summary: null,
+          sections: { Purpose: null },
+        }),
+      },
     });
     const run = runFamilyCheck(wiki);
 
     expect(run.exitCode).toBe(0);
-    expect(run.notes).toBe(1);
+    expect(run.notes).toBe(2);
     expect(summary(run.findings)).toEqual([
+      "wiki/misc/broken.md|base-fields|unknown-folder",
+      "wiki/misc/broken.md|base-fields|base-tag-missing",
+      "wiki/misc/broken.md|base-fields|created-missing",
+      "wiki/misc/broken.md|base-fields|summary-missing",
+      "wiki/misc/broken.md|heading-rule|required-section-empty",
       "wiki/misc/loose.md|base-fields|unknown-folder",
     ]);
   });
@@ -466,7 +479,7 @@ describe("family check --wiki (AC-02 five placement rows)", () => {
     const noteRules: NoteRules = (checkedNote, family) => [
       {
         path: checkedNote.path,
-        kind: "custom-rule",
+        kind: "example-wiki-rule",
         detail: `Checked ${family?.family ?? "none"}.`,
       },
     ];
@@ -475,7 +488,7 @@ describe("family check --wiki (AC-02 five placement rows)", () => {
     expect(checks).toEqual(["base-fields", "wiki-rule"]);
     expect(findings.map((item) => item.kind)).toEqual([
       "created-missing",
-      "custom-rule",
+      "example-wiki-rule",
     ]);
   });
 });
