@@ -11,30 +11,38 @@ import { baseFields, parseNote, sha256Bytes } from "agent-wiki-core/notes";
 import { cleanTargetNote } from "./support/note-check.ts";
 import { root, wikiFixture } from "./support/wiki.ts";
 
-test("wikiCoreFor mounts note check from agent-wiki-core/commands with literal identity and required environment", async () => {
-  const folder = wikiFixture({
-    "wiki/people/ada-lovelace.md": cleanTargetNote,
-  });
+function mountExampleWiki(
+  environment: Readonly<Record<string, string | undefined>>,
+) {
   const contract = contractFor({
     cli: "example-wiki",
-    commands: [
-      ...wikiCoreFor("example-wiki", { repoRoot: root, environment: {} }),
-    ],
+    commands: [...wikiCoreFor("example-wiki", { repoRoot: root, environment })],
     causes: { ...commonCauses, ...wikiCoreCauses },
     installedAddons: ["programs", "diagnostics"],
   });
   usePathParser(contract.boundary.path);
-  const discoverArgv = ["--discover-command", "example-wiki.note.check"];
-  const discovered = await runInProcess(contract, {
-    addons: {
-      programs: programsAddon(),
-      diagnostics: diagnosticsAddon({
-        cli: "example-wiki",
-        environment: {},
-        argv: discoverArgv,
-      }),
-    },
-  })(discoverArgv);
+  return (argv: readonly string[]) =>
+    runInProcess(contract, {
+      addons: {
+        programs: programsAddon(),
+        diagnostics: diagnosticsAddon({
+          cli: "example-wiki",
+          environment: {},
+          argv,
+        }),
+      },
+    })(argv);
+}
+
+test("wikiCoreFor mounts note check from agent-wiki-core/commands with literal identity and required environment", async () => {
+  const folder = wikiFixture({
+    "wiki/people/ada-lovelace.md": cleanTargetNote,
+  });
+  const runExampleWiki = mountExampleWiki({});
+  const discovered = await runExampleWiki([
+    "--discover-command",
+    "example-wiki.note.check",
+  ]);
   expect(discovered.kind).toBe("envelope");
   if (discovered.kind !== "envelope") return;
   expect(discovered.envelope.result.exitCode).toBe(0);
@@ -49,16 +57,7 @@ test("wikiCoreFor mounts note check from agent-wiki-core/commands with literal i
   });
 
   const checkArgv = ["note", "check", "--wiki", folder];
-  const checked = await runInProcess(contract, {
-    addons: {
-      programs: programsAddon(),
-      diagnostics: diagnosticsAddon({
-        cli: "example-wiki",
-        environment: {},
-        argv: checkArgv,
-      }),
-    },
-  })(checkArgv);
+  const checked = await runExampleWiki(checkArgv);
   expect(checked.kind).toBe("envelope");
   if (checked.kind !== "envelope") return;
   expect(checked.exitCode).toBe(0);
@@ -67,28 +66,10 @@ test("wikiCoreFor mounts note check from agent-wiki-core/commands with literal i
   );
   expect(checked.envelope.result.causeCode).toBe("SUCCESS_UNCHANGED");
 
-  const invalidEnvContract = contractFor({
-    cli: "example-wiki",
-    commands: [
-      ...wikiCoreFor("example-wiki", {
-        repoRoot: root,
-        environment: { WIKI_NOTES_CHECK_BUDGET_MS: "0" },
-      }),
-    ],
-    causes: { ...commonCauses, ...wikiCoreCauses },
-    installedAddons: ["programs", "diagnostics"],
+  const runWithInvalidEnv = mountExampleWiki({
+    WIKI_NOTES_CHECK_BUDGET_MS: "0",
   });
-  usePathParser(invalidEnvContract.boundary.path);
-  const invalidRun = await runInProcess(invalidEnvContract, {
-    addons: {
-      programs: programsAddon(),
-      diagnostics: diagnosticsAddon({
-        cli: "example-wiki",
-        environment: {},
-        argv: checkArgv,
-      }),
-    },
-  })(checkArgv);
+  const invalidRun = await runWithInvalidEnv(checkArgv);
   expect(invalidRun.kind).toBe("envelope");
   if (invalidRun.kind !== "envelope") return;
   expect(invalidRun.exitCode).toBe(3);

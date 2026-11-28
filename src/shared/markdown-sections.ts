@@ -1,4 +1,4 @@
-import { baseFields } from "./rules.ts";
+import type { baseFields } from "./rules.ts";
 import {
   dateProperty,
   fieldsOf,
@@ -10,10 +10,10 @@ import {
 type BaseFieldName = keyof typeof baseFields;
 
 function headerField(
-  properties: Readonly<Record<string, unknown>>,
+  headerFields: Readonly<Record<string, unknown>>,
   field: BaseFieldName,
 ): unknown {
-  return Object.hasOwn(baseFields, field) ? properties[field] : undefined;
+  return headerFields[field];
 }
 
 export type MarkdownFile = {
@@ -50,7 +50,7 @@ export function parseNote(path: string, text: string): Note {
     created: dateProperty(headerField(properties, "created")),
     replacedBy: nonBlank(headerField(properties, "replaced_by")),
     aliases: texts(headerField(properties, "aliases")),
-    recordId: asWritten(block, "record_id"),
+    recordId: asWritten(block, "record_id" satisfies BaseFieldName),
     headerFields: properties,
   };
 }
