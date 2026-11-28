@@ -13,10 +13,17 @@ const rumdlFolderScanExtensions: ReadonlySet<string> = new Set([
   ".rmd",
 ]);
 
+export type SpecialFileKind = "pipe" | "socket" | "device" | "non-regular file";
+
 export type OwnedFiles =
   | { readonly kind: "listed"; readonly files: readonly string[] }
   | { readonly kind: "unreadable-settings"; readonly reason: string }
-  | { readonly kind: "linked"; readonly linkedPath: string };
+  | { readonly kind: "linked"; readonly linkedPath: string }
+  | {
+      readonly kind: "special-file";
+      readonly path: string;
+      readonly entryKind: SpecialFileKind;
+    };
 
 export type ExcludeGlobsResult =
   | { readonly ok: true; readonly globs: readonly Bun.Glob[] }
