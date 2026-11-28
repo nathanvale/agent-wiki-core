@@ -159,16 +159,17 @@ export function noInputCommand<const Identity extends string>(
   });
 }
 
+type WikiReadAnswer =
+  | { readonly kind?: "ok"; readonly message: string; readonly data: unknown }
+  | { readonly kind: "refused"; readonly message: string };
+
 export function wikiReadCommand<
   const Identity extends string,
   const I extends InputSchema,
 >(
   spec: CommandSpec<Identity>,
   input: I,
-  answer: (
-    wikiRoot: string,
-    parsed: ParsedInput<I>,
-  ) => { readonly message: string; readonly data: unknown },
+  answer: (wikiRoot: string, parsed: ParsedInput<I>) => WikiReadAnswer,
 ) {
   return command({
     identity: spec.identity,
@@ -186,8 +187,16 @@ export function wikiReadCommand<
       const wikiRoot = resolve(rawWiki);
       if (!isWikiRoot(wikiRoot))
         return context.result(preconditionUnmet(spec.identity), noWikiRoot);
-      const { message, data } = answer(wikiRoot, parsed);
-      return context.result(succeeded(spec.identity), report(message, data));
+      const outcome = answer(wikiRoot, parsed);
+      if (outcome.kind === "refused")
+        return context.result(
+          preconditionUnmet(spec.identity),
+          refused(outcome.message),
+        );
+      return context.result(
+        succeeded(spec.identity),
+        report(outcome.message, outcome.data),
+      );
     },
   });
 }

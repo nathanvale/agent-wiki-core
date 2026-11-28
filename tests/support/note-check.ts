@@ -7,7 +7,12 @@ import {
   readObject,
   readString,
 } from "./json.ts";
-import { readResultFields, root, wikiFixture } from "./wiki.ts";
+import {
+  readResultFields,
+  root,
+  spawnCoreCliJson,
+  wikiFixture,
+} from "./wiki.ts";
 
 type NoteCheckEnvelope = {
   readonly contractVersion: string;
@@ -87,30 +92,14 @@ export function runNoteCheck(
   workingDirectory: string = root,
   spawnTimeoutMilliseconds = 4_000,
 ): { readonly exitCode: number; readonly envelope: NoteCheckEnvelope } {
-  const stateHome = wikiFixture({});
-  const run = Bun.spawnSync(
-    ["bun", join(root, "src/cli.ts"), "note", "check", ...args, "--json"],
-    {
-      cwd: workingDirectory,
-      env: {
-        ...process.env,
-        XDG_STATE_HOME: stateHome,
-        ...extraEnv,
-      },
-      stdout: "pipe",
-      stderr: "pipe",
-      timeout: spawnTimeoutMilliseconds,
-    },
-  );
-  const stdout = run.stdout.toString();
-  if (stdout.trim() === "") {
-    throw new Error(
-      `Expected JSON stdout, got exit=${String(run.exitCode)} stderr=${run.stderr.toString()}`,
-    );
-  }
+  const run = spawnCoreCliJson(["note", "check", ...args], {
+    extraEnv,
+    workingDirectory,
+    timeoutMilliseconds: spawnTimeoutMilliseconds,
+  });
   return {
     exitCode: run.exitCode,
-    envelope: readNoteCheckEnvelope(stdout),
+    envelope: readNoteCheckEnvelope(run.stdout),
   };
 }
 
