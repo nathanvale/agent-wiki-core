@@ -15,6 +15,7 @@
     "build:bundles": "bun scripts/build-bundles.ts",
     "check:bundles": "bun scripts/build-bundles.ts --check",
     "regenerate": "bun run build:bundles",
+    "surface:record": "bun scripts/record-public-surface.ts",
     "check:changesets": "bun run --bun changeset status --since origin/main && bun scripts/check-gated-paths.ts",
     "check:recorded-health-sizes": "bun scripts/check-recorded-health-sizes.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
