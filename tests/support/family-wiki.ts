@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { parseJson, readObject, readString } from "./json.ts";
-import { readResultFields, spawnCoreCliJson, wikiFixture } from "./wiki.ts";
+import { readResultFields, root, spawnCliJson, wikiFixture } from "./wiki.ts";
 
 export type FamilyWikiFixtureOptions = {
   readonly table?: unknown;
@@ -71,13 +71,79 @@ function readCliEnvelope(stdout: string): CliEnvelope {
   }));
 }
 
+export type ObservedFinding = {
+  readonly path: string;
+  readonly check: string;
+  readonly kind: string;
+  readonly detail: string;
+};
+
+export type FamilyCheckRun = {
+  readonly exitCode: number;
+  readonly commandIdentity: string;
+  readonly causeCode: string;
+  readonly message: string;
+  readonly notes: number;
+  readonly findings: readonly ObservedFinding[];
+};
+
+function runCli(
+  cliPath: string,
+  args: readonly string[],
+  timeoutMilliseconds = 10_000,
+): { readonly exitCode: number; readonly envelope: CliEnvelope } {
+  const run = spawnCliJson(cliPath, args, { timeoutMilliseconds });
+  return {
+    exitCode: run.exitCode,
+    envelope: readCliEnvelope(run.stdout),
+  };
+}
+
 export function runCoreCli(
   args: readonly string[],
   timeoutMilliseconds = 10_000,
 ): { readonly exitCode: number; readonly envelope: CliEnvelope } {
-  const run = spawnCoreCliJson(args, { timeoutMilliseconds });
+  return runCli(join(root, "src/cli.ts"), args, timeoutMilliseconds);
+}
+
+export function runConsumerCli(
+  args: readonly string[],
+  timeoutMilliseconds = 10_000,
+): { readonly exitCode: number; readonly envelope: CliEnvelope } {
+  return runCli(
+    join(root, "tests/fixtures/consumer-cli.ts"),
+    args,
+    timeoutMilliseconds,
+  );
+}
+
+export function readFamilyCheckRun(run: {
+  readonly exitCode: number;
+  readonly envelope: CliEnvelope;
+}): FamilyCheckRun {
+  const data = run.envelope.result.data;
+  const notes =
+    data !== null && typeof data["notes"] === "number" ? data["notes"] : -1;
+  const raw =
+    data !== null && Array.isArray(data["findings"]) ? data["findings"] : [];
+  const findings: ObservedFinding[] = raw.map((item: unknown) => {
+    if (typeof item !== "object" || item === null) {
+      throw new Error("Expected finding object.");
+    }
+    const record = Object.fromEntries(Object.entries(item));
+    return {
+      path: String(record["path"]),
+      check: String(record["check"]),
+      kind: String(record["kind"]),
+      detail: String(record["detail"]),
+    };
+  });
   return {
     exitCode: run.exitCode,
-    envelope: readCliEnvelope(run.stdout),
+    commandIdentity: run.envelope.result.commandIdentity,
+    causeCode: run.envelope.result.causeCode,
+    message: run.envelope.message,
+    notes,
+    findings,
   };
 }

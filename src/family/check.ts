@@ -1,9 +1,13 @@
 import { readFamilyTable } from "../shared/family-table.ts";
 import { readRecords } from "../shared/markdown-files.ts";
 import { wikiInput, wikiReadCommand } from "../shared/wiki-command.ts";
-import { checkNote } from "./rules.ts";
+import { checkRecords } from "./rules.ts";
+import type { FamilyCheckOptions } from "./rules.ts";
 
-export function familyCheckFor<const Cli extends string>(cli: Cli) {
+export function familyCheckFor<const Cli extends string>(
+  cli: Cli,
+  options: FamilyCheckOptions = {},
+) {
   const identity: `${Cli}.family.check` = `${cli}.family.check`;
   return wikiReadCommand(
     {
@@ -22,7 +26,7 @@ export function familyCheckFor<const Cli extends string>(cli: Cli) {
         };
       }
       const records = readRecords(wikiRoot);
-      const findings = records.flatMap((note) => checkNote(note, loaded.table));
+      const findings = checkRecords(records, loaded.table, options);
       const noteNoun = records.length === 1 ? "note" : "notes";
       const findingNoun = findings.length === 1 ? "finding" : "findings";
       return {

@@ -1349,7 +1349,10 @@
   },
   "exports": {
     "./commands": {
+      "CrossRecordRules": "type",
+      "NoteRules": "type",
       "WikiCoreOptions": "type",
+      "WikiRuleFinding": "type",
       "noInput": "value",
       "noWikiRoot": "value",
       "preconditionUnmet": "value",
