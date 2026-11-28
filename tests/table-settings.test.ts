@@ -1,5 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import {
+  checkNoteNames,
+  checkTableSettings,
+  tableSettingKeys,
+} from "../src/family-table/settings/rules.ts";
+import type {
+  FamilyHeaderSetting,
+  NoteNamesSetting,
+  TableSettings,
+  UndeclaredFoldersSetting,
+} from "../src/family-table/settings/rules.ts";
+import {
   familyWikiFixture,
   readFamilyCheckRun,
   runCoreCli,
@@ -254,5 +265,80 @@ describe("hard rules and null-safe unfiled placement", () => {
       "wiki/inbox/draft.md|unknown-folder",
       "wiki/stray.md|outside-family-folder",
     ]);
+  });
+});
+
+describe("table setting types and validators share one sealed vocabulary", () => {
+  test("every setting value and key accepted by the types is accepted by the validators, and no unlisted value is accepted", () => {
+    const familyHeaderValues = {
+      required: true,
+      "from-folder": true,
+    } as const satisfies Record<FamilyHeaderSetting, true>;
+    const undeclaredFoldersValues = {
+      finding: true,
+      "family-free": true,
+    } as const satisfies Record<UndeclaredFoldersSetting, true>;
+    const noteNamesValues = {
+      title: true,
+      "dated-title": true,
+      any: true,
+    } as const satisfies Record<NoteNamesSetting, true>;
+    const settingKeyMap = {
+      familyHeader: true,
+      undeclaredFolders: true,
+      summaryRequired: true,
+      createdRequired: true,
+      noteNames: true,
+      uniqueNoteNames: true,
+    } as const satisfies Record<keyof TableSettings, true>;
+
+    expect<readonly string[]>([...tableSettingKeys].sort()).toEqual(
+      Object.keys(settingKeyMap).sort(),
+    );
+
+    const familyHeaderList = Object.keys(familyHeaderValues);
+    for (const value of familyHeaderList) {
+      const checked = checkTableSettings({ familyHeader: value });
+      expect(checked.ok).toBe(true);
+      if (checked.ok) expect<string>(checked.value.familyHeader).toBe(value);
+    }
+    expect(checkTableSettings({ familyHeader: "__invalid__" })).toEqual({
+      ok: false,
+      detail: `Key "familyHeader" must be one of ${familyHeaderList.map((v) => `"${v}"`).join(", ")}.`,
+    });
+
+    const undeclaredFoldersList = Object.keys(undeclaredFoldersValues);
+    for (const value of undeclaredFoldersList) {
+      const checked = checkTableSettings({ undeclaredFolders: value });
+      expect(checked.ok).toBe(true);
+      if (checked.ok) {
+        expect<string>(checked.value.undeclaredFolders).toBe(value);
+      }
+    }
+    expect(checkTableSettings({ undeclaredFolders: "__invalid__" })).toEqual({
+      ok: false,
+      detail: `Key "undeclaredFolders" must be one of ${undeclaredFoldersList.map((v) => `"${v}"`).join(", ")}.`,
+    });
+
+    const noteNamesList = Object.keys(noteNamesValues);
+    for (const value of noteNamesList) {
+      const checked = checkTableSettings({ noteNames: value });
+      expect(checked.ok).toBe(true);
+      if (checked.ok) expect<string>(checked.value.noteNames).toBe(value);
+      const checkedNoteNames = checkNoteNames(value, "noteNames");
+      expect(checkedNoteNames.ok).toBe(true);
+      if (checkedNoteNames.ok) {
+        expect<string>(checkedNoteNames.value).toBe(value);
+      }
+    }
+    const noteNamesExpectedDetail = `Key "noteNames" must be one of ${noteNamesList.map((v) => `"${v}"`).join(", ")}.`;
+    expect(checkTableSettings({ noteNames: "__invalid__" })).toEqual({
+      ok: false,
+      detail: noteNamesExpectedDetail,
+    });
+    expect(checkNoteNames("__invalid__", "noteNames")).toEqual({
+      ok: false,
+      detail: noteNamesExpectedDetail,
+    });
   });
 });

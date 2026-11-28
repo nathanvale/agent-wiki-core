@@ -1,44 +1,22 @@
-export type FamilyHeaderSetting = "required" | "from-folder";
-export type UndeclaredFoldersSetting = "finding" | "family-free";
-export type NoteNamesSetting = "title" | "dated-title" | "any";
+const familyHeaderChoices = ["required", "from-folder"] as const;
+const undeclaredFoldersChoices = ["finding", "family-free"] as const;
+const noteNamesChoices = ["title", "dated-title", "any"] as const;
 
-export type TableSettings = {
-  readonly familyHeader: FamilyHeaderSetting;
-  readonly undeclaredFolders: UndeclaredFoldersSetting;
-  readonly summaryRequired: boolean;
-  readonly createdRequired: boolean;
-  readonly noteNames: NoteNamesSetting;
-  readonly uniqueNoteNames: boolean;
-};
+export type FamilyHeaderSetting = (typeof familyHeaderChoices)[number];
+export type UndeclaredFoldersSetting =
+  (typeof undeclaredFoldersChoices)[number];
+export type NoteNamesSetting = (typeof noteNamesChoices)[number];
 
 export type Check<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly detail: string };
 
-export const tableSettingKeys: readonly (keyof TableSettings)[] = [
-  "familyHeader",
-  "undeclaredFolders",
-  "summaryRequired",
-  "createdRequired",
-  "noteNames",
-  "uniqueNoteNames",
-];
-
-const familyHeaderChoices: readonly FamilyHeaderSetting[] = [
-  "required",
-  "from-folder",
-];
-
-const undeclaredFoldersChoices: readonly UndeclaredFoldersSetting[] = [
-  "finding",
-  "family-free",
-];
-
-const noteNamesChoices: readonly NoteNamesSetting[] = [
-  "title",
-  "dated-title",
-  "any",
-];
+type CheckedValue<T> = T extends {
+  readonly ok: true;
+  readonly value: infer Value;
+}
+  ? Value
+  : never;
 
 function checkChoice<const T extends string>(
   value: unknown,
@@ -75,6 +53,40 @@ function checkBoolean(
   return { ok: true, value };
 }
 
+const tableSettingChecks = {
+  familyHeader: (value: unknown) =>
+    checkChoiceWithDefault(
+      value,
+      "familyHeader",
+      familyHeaderChoices,
+      "required",
+    ),
+  undeclaredFolders: (value: unknown) =>
+    checkChoiceWithDefault(
+      value,
+      "undeclaredFolders",
+      undeclaredFoldersChoices,
+      "finding",
+    ),
+  summaryRequired: (value: unknown) =>
+    checkBoolean(value, "summaryRequired", true),
+  createdRequired: (value: unknown) =>
+    checkBoolean(value, "createdRequired", true),
+  noteNames: (value: unknown) =>
+    checkChoiceWithDefault(value, "noteNames", noteNamesChoices, "title"),
+  uniqueNoteNames: (value: unknown) =>
+    checkBoolean(value, "uniqueNoteNames", true),
+} as const;
+
+export type TableSettings = {
+  readonly [Key in keyof typeof tableSettingChecks]: CheckedValue<
+    ReturnType<(typeof tableSettingChecks)[Key]>
+  >;
+};
+
+export const tableSettingKeys: readonly string[] =
+  Object.keys(tableSettingChecks);
+
 export function checkNoteNames(
   value: unknown,
   key: string,
@@ -85,43 +97,24 @@ export function checkNoteNames(
 export function checkTableSettings(
   record: Record<string, unknown>,
 ): Check<TableSettings> {
-  const familyHeader = checkChoiceWithDefault(
-    record["familyHeader"],
-    "familyHeader",
-    familyHeaderChoices,
-    "required",
-  );
+  const familyHeader = tableSettingChecks.familyHeader(record["familyHeader"]);
   if (!familyHeader.ok) return familyHeader;
-  const undeclaredFolders = checkChoiceWithDefault(
+  const undeclaredFolders = tableSettingChecks.undeclaredFolders(
     record["undeclaredFolders"],
-    "undeclaredFolders",
-    undeclaredFoldersChoices,
-    "finding",
   );
   if (!undeclaredFolders.ok) return undeclaredFolders;
-  const summaryRequired = checkBoolean(
+  const summaryRequired = tableSettingChecks.summaryRequired(
     record["summaryRequired"],
-    "summaryRequired",
-    true,
   );
   if (!summaryRequired.ok) return summaryRequired;
-  const createdRequired = checkBoolean(
+  const createdRequired = tableSettingChecks.createdRequired(
     record["createdRequired"],
-    "createdRequired",
-    true,
   );
   if (!createdRequired.ok) return createdRequired;
-  const noteNames = checkChoiceWithDefault(
-    record["noteNames"],
-    "noteNames",
-    noteNamesChoices,
-    "title",
-  );
+  const noteNames = tableSettingChecks.noteNames(record["noteNames"]);
   if (!noteNames.ok) return noteNames;
-  const uniqueNoteNames = checkBoolean(
+  const uniqueNoteNames = tableSettingChecks.uniqueNoteNames(
     record["uniqueNoteNames"],
-    "uniqueNoteNames",
-    true,
   );
   if (!uniqueNoteNames.ok) return uniqueNoteNames;
   return {
