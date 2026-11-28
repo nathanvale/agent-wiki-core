@@ -265,4 +265,200 @@ describe("family list --wiki", () => {
     expect(missing.path).toContain("family-table.json");
     expect(missing.detail).toContain("exist");
   });
+
+  test("loads a family declaring variants and afterVariants by literal value", () => {
+    const tableWithVariants = {
+      families: [
+        {
+          family: "study",
+          folder: "wiki/studies/",
+          headings: [
+            { name: "Answer", optional: false },
+            { name: "Evidence", optional: false, afterVariants: true },
+          ],
+          variants: [
+            {
+              name: "holiday",
+              headings: [
+                {
+                  name: "Deadlines",
+                  hint: "Book, cancel and pay by dates.",
+                },
+              ],
+            },
+            {
+              name: "engineering",
+              headings: [{ name: "Constraints" }],
+            },
+          ],
+        },
+      ],
+    };
+    const wiki = familyWikiFixture({ table: tableWithVariants });
+    const run = runCoreCli(["family", "list", "--wiki", wiki]);
+
+    expect(run.exitCode).toBe(0);
+    expect(run.envelope.result.causeCode).toBe("SUCCESS_UNCHANGED");
+    expect(run.envelope.result.data).toEqual({
+      baseTag: null,
+      discoveryTags: null,
+      tagLimit: 2,
+      summaryMaxLength: 200,
+      unfiledFolder: "wiki/inbox/",
+      familyFreeFolders: [],
+      reservedFamilies: {},
+      renames: [],
+      families: [
+        {
+          family: "study",
+          folder: "wiki/studies/",
+          familyFields: [],
+          headings: [
+            { name: "Answer", optional: false },
+            { name: "Evidence", optional: false, afterVariants: true },
+          ],
+          variants: [
+            {
+              name: "holiday",
+              headings: [
+                {
+                  name: "Deadlines",
+                  hint: "Book, cancel and pay by dates.",
+                },
+              ],
+            },
+            {
+              name: "engineering",
+              headings: [{ name: "Constraints" }],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  function runSingleFamilyList(family: Record<string, unknown>) {
+    const wiki = familyWikiFixture({ table: { families: [family] } });
+    return runCoreCli(["family", "list", "--wiki", wiki]);
+  }
+
+  test("refuses a duplicate variant name within a family", () => {
+    const run = runSingleFamilyList({
+      family: "study",
+      folder: "wiki/studies/",
+      headings: [{ name: "Answer", optional: false }],
+      variants: [
+        { name: "holiday", headings: [{ name: "Deadlines" }] },
+        { name: "holiday", headings: [{ name: "Budget" }] },
+      ],
+    });
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain("variants");
+    expect(run.envelope.message).toContain("holiday");
+  });
+
+  test("refuses a variant name with a capital letter", () => {
+    const run = runSingleFamilyList({
+      family: "study",
+      folder: "wiki/studies/",
+      headings: [{ name: "Answer", optional: false }],
+      variants: [{ name: "Holiday", headings: [{ name: "Deadlines" }] }],
+    });
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain("variants[0].name");
+    expect(run.envelope.message).toContain("Holiday");
+  });
+
+  test("refuses an unknown key inside a variant", () => {
+    const run = runSingleFamilyList({
+      family: "study",
+      folder: "wiki/studies/",
+      headings: [{ name: "Answer", optional: false }],
+      variants: [
+        {
+          name: "holiday",
+          extraVariantKey: true,
+          headings: [{ name: "Deadlines" }],
+        },
+      ],
+    });
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain("extraVariantKey");
+  });
+
+  test("refuses optional: false and optional: true on a variant heading as an unknown key", () => {
+    for (const optionalValue of [false, true]) {
+      const run = runSingleFamilyList({
+        family: "study",
+        folder: "wiki/studies/",
+        headings: [{ name: "Answer", optional: false }],
+        variants: [
+          {
+            name: "holiday",
+            headings: [{ name: "Deadlines", optional: optionalValue }],
+          },
+        ],
+      });
+
+      expect(run.exitCode).toBe(3);
+      expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+      expect(run.envelope.message).toContain("family-table.json");
+      expect(run.envelope.message).toContain("Unknown key");
+      expect(run.envelope.message).toContain("optional");
+    }
+  });
+
+  test("refuses afterVariants on a family without variants", () => {
+    const run = runSingleFamilyList({
+      family: "project",
+      folder: "wiki/projects/",
+      headings: [{ name: "Purpose", optional: false, afterVariants: true }],
+    });
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain("afterVariants");
+    expect(run.envelope.message).not.toContain("Unknown key");
+  });
+
+  test("refuses an empty variants list", () => {
+    const run = runSingleFamilyList({
+      family: "study",
+      folder: "wiki/studies/",
+      headings: [{ name: "Answer", optional: false }],
+      variants: [],
+    });
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain("variants");
+    expect(run.envelope.message).not.toContain("Unknown key");
+  });
+
+  test("refuses a family field named variant on a family that declares variants", () => {
+    const run = runSingleFamilyList({
+      family: "study",
+      folder: "wiki/studies/",
+      familyFields: [{ name: "variant", value: "holiday" }],
+      headings: [{ name: "Answer", optional: false }],
+      variants: [{ name: "holiday", headings: [{ name: "Deadlines" }] }],
+    });
+
+    expect(run.exitCode).toBe(3);
+    expect(run.envelope.result.causeCode).toBe("DOMAIN_PRECONDITION_UNMET");
+    expect(run.envelope.message).toContain("family-table.json");
+    expect(run.envelope.message).toContain("familyFields");
+    expect(run.envelope.message).toContain("variant");
+  });
 });

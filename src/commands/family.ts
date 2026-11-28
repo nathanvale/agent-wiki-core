@@ -12,5 +12,7 @@ export type {
   FamilyTable,
   Heading,
   Rename,
+  Variant,
+  VariantHeading,
 } from "../family-table/rules.ts";
 export { readFamilyTable } from "../shared/family-table.ts";

@@ -1384,6 +1384,8 @@
       "Heading": "type",
       "NoteRules": "type",
       "Rename": "type",
+      "Variant": "type",
+      "VariantHeading": "type",
       "WikiRuleFinding": "type",
       "checkNote": "value",
       "readFamilyTable": "value"
@@ -1434,7 +1436,8 @@
     "replaced_by": "string",
     "summary": "string",
     "tags": "list",
-    "title": "string"
+    "title": "string",
+    "variant": "string"
   },
   "environmentVariables": [
     "WIKI_NOTES_CHECK_BUDGET_MS",
