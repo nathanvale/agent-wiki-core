@@ -1,3 +1,4 @@
+import type { baseFields } from "./rules.ts";
 import {
   dateProperty,
   fieldsOf,
@@ -5,6 +6,15 @@ import {
   texts,
   unixLineEndings,
 } from "./values.ts";
+
+type BaseFieldName = keyof typeof baseFields;
+
+function headerField(
+  headerFields: Readonly<Record<string, unknown>>,
+  field: BaseFieldName,
+): unknown {
+  return headerFields[field];
+}
 
 export type MarkdownFile = {
   readonly path: string;
@@ -33,14 +43,14 @@ export function parseNote(path: string, text: string): Note {
   return {
     path,
     text: content,
-    family: nonBlank(properties["family"]),
-    tags: texts(properties["tags"]),
-    title: nonBlank(properties["title"]),
-    summary: nonBlank(properties["summary"]),
-    created: dateProperty(properties["created"]),
-    replacedBy: nonBlank(properties["replaced_by"]),
-    aliases: texts(properties["aliases"]),
-    recordId: asWritten(block, "record_id"),
+    family: nonBlank(headerField(properties, "family")),
+    tags: texts(headerField(properties, "tags")),
+    title: nonBlank(headerField(properties, "title")),
+    summary: nonBlank(headerField(properties, "summary")),
+    created: dateProperty(headerField(properties, "created")),
+    replacedBy: nonBlank(headerField(properties, "replaced_by")),
+    aliases: texts(headerField(properties, "aliases")),
+    recordId: asWritten(block, "record_id" satisfies BaseFieldName),
     headerFields: properties,
   };
 }

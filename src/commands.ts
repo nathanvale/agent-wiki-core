@@ -1,7 +1,7 @@
 import { resolve } from "node:path";
 import type { commonCauses } from "agent-cli-kernel";
 import { command } from "agent-cli-kernel";
-import { noteCheckFor } from "./note/check.ts";
+import { wikiCoreFor } from "./commands/mount.ts";
 
 const noInput = {
   arguments: [],
@@ -45,5 +45,8 @@ const repoRoot = resolve(import.meta.dirname, "..");
 
 export const commands = [
   status,
-  noteCheckFor("agent-wiki-core", repoRoot),
+  ...wikiCoreFor("agent-wiki-core", {
+    repoRoot,
+    environment: process.env,
+  }),
 ] as const;

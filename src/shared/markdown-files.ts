@@ -12,25 +12,9 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import type { Stats } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import {
-  asWritten,
-  bodyOf,
-  folderOf,
-  normalized,
-  parseHeader,
-  parseNote,
-  rawSectionsOf,
-  sectionBodies,
-  sectionsOf,
-  splitMarkdownSections,
-} from "./markdown-sections.ts";
-import type {
-  MarkdownFile,
-  MarkdownSection,
-  Note,
-} from "./markdown-sections.ts";
+import { folderOf, parseNote } from "./markdown-sections.ts";
+import type { MarkdownFile, Note } from "./markdown-sections.ts";
 import { sha256Bytes, stagePathForMove } from "./note-hashes.ts";
 import type { MoveSnapshot } from "./note-hashes.ts";
 import {
@@ -41,20 +25,7 @@ import {
   parseRumdlExcludeGlobs,
 } from "./rumdl-config.ts";
 import type { ExcludeGlobsResult, OwnedFiles } from "./rumdl-config.ts";
-
-export {
-  asWritten,
-  bodyOf,
-  folderOf,
-  normalized,
-  parseHeader,
-  parseNote,
-  rawSectionsOf,
-  sectionBodies,
-  sectionsOf,
-  splitMarkdownSections,
-};
-export type { MarkdownFile, MarkdownSection, Note };
+import { ownedFolders, statIfPresent, walkWikiFiles } from "./wiki-walk.ts";
 
 export type FamilyTemplateFile = {
   readonly path: string;
@@ -89,15 +60,6 @@ export function canonicalWikiRoot(path: string): string {
   }
 }
 
-function statIfPresent(read: () => Stats | undefined): Stats | undefined {
-  try {
-    return read();
-  } catch (error) {
-    if (errorCode(error) === "ENOTDIR") return undefined;
-    throw error;
-  }
-}
-
 export function isWikiRoot(wikiRoot: string): boolean {
   return (
     statIfPresent(() =>
@@ -115,15 +77,7 @@ export function isFile(path: string): boolean {
   );
 }
 
-export function hasLinkedTemplatesFolder(wikiRoot: string): boolean {
-  return (
-    lstatSync(join(wikiRoot, "templates"), {
-      throwIfNoEntry: false,
-    })?.isSymbolicLink() ?? false
-  );
-}
-
-export function isExecutableFile(path: string): boolean {
+function isExecutableFile(path: string): boolean {
   const info = statIfPresent(() => statSync(path, { throwIfNoEntry: false }));
   if (info === undefined || !info.isFile()) return false;
   try {
@@ -133,10 +87,6 @@ export function isExecutableFile(path: string): boolean {
     return false;
   }
 }
-
-export type { OwnedFiles };
-
-const ownedFolders = ["wiki", "templates"] as const;
 
 function excludeGlobsFromConfig(
   configPath: string | undefined,
@@ -155,42 +105,6 @@ function excludeGlobsFromConfig(
   return parseRumdlExcludeGlobs(configPath, raw);
 }
 
-type Walk = {
-  readonly wikiRoot: string;
-  readonly isExcluded: (wikiRelativePath: string) => boolean;
-  readonly files: string[];
-};
-
-function walkFolder(walk: Walk, folder: string): string | null {
-  const entries = readdirSync(folder, { withFileTypes: true }).sort(
-    (left, right) =>
-      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
-  );
-  for (const entry of entries) {
-    const path = join(folder, entry.name);
-    const wikiRelativePath = relative(walk.wikiRoot, path).replaceAll(
-      "\\",
-      "/",
-    );
-    if (entry.isSymbolicLink()) return wikiRelativePath;
-    if (entry.isDirectory()) {
-      const linked = walkFolder(walk, path);
-      if (linked !== null) return linked;
-    } else if (
-      entry.isFile() &&
-      isRumdlMarkdownName(entry.name) &&
-      !walk.isExcluded(wikiRelativePath)
-    ) {
-      walk.files.push(path);
-    }
-  }
-  return null;
-}
-
-function isRealFolder(path: string): boolean {
-  return lstatSync(path, { throwIfNoEntry: false })?.isDirectory() ?? false;
-}
-
 export function ownedMarkdownFiles(
   wikiRoot: string,
   configPath?: string,
@@ -199,19 +113,10 @@ export function ownedMarkdownFiles(
   if (!excluded.ok) {
     return { kind: "unreadable-settings", reason: excluded.reason };
   }
-  const walk: Walk = {
-    wikiRoot,
+  return walkWikiFiles(wikiRoot, {
     isExcluded: (wikiRelativePath) =>
       excluded.globs.some((glob) => glob.match(wikiRelativePath)),
-    files: [],
-  };
-  for (const folder of ownedFolders) {
-    const path = join(wikiRoot, folder);
-    if (!isRealFolder(path)) continue;
-    const linked = walkFolder(walk, path);
-    if (linked !== null) return { kind: "linked", linkedPath: linked };
-  }
-  return { kind: "listed", files: walk.files };
+  });
 }
 
 function nativeRumdlBinary(repoRoot: string): string | null {

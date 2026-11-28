@@ -7,6 +7,7 @@ import type {
 import { programDetails } from "agent-cli-kernel/addons/programs";
 import { canonicalRouteNames } from "../shared/rules.ts";
 import {
+  extractCutOutputFiles,
   parseRumdlFindings,
   parseRumdlVersion,
   pinnedRumdlVersion,
@@ -28,6 +29,7 @@ type RumdlTools = {
 };
 
 export type RumdlCheckRequest = RumdlTools & {
+  readonly wikiRoot: string;
   readonly configPath: string;
   readonly files: readonly string[];
   readonly rumdlVersion: string;
@@ -234,12 +236,29 @@ function timedOutMessage(state: RunState, exitCode: number | null): string {
   return `rumdl check timed out after ${String(state.request.timeoutMilliseconds)} ms (exit ${String(exitCode)}). Repair: Inspect the diagnostics log for slow files or a stuck rumdl process and .rumdl.toml syntax, then run ${canonicalRouteNames.noteCheck} again.`;
 }
 
+const maxNamedCutOutputFiles = 10;
+
+function formatCutOutputFiles(files: readonly string[]): string {
+  const shown = files.slice(0, maxNamedCutOutputFiles).join(", ");
+  const extra = files.length - maxNamedCutOutputFiles;
+  return extra > 0 ? `${shown} (and ${String(extra)} more)` : shown;
+}
+
 function cutOutputMessage(
   exitCode: number | null,
   stderr: string,
   stdout: string,
+  wikiRoot: string,
 ): string {
   const start = boundedDetail(stderr.trim() || stdout.trim());
+  const namedFiles =
+    Buffer.byteLength(stdout) >= Buffer.byteLength(stderr)
+      ? extractCutOutputFiles(stdout, wikiRoot)
+      : [];
+  if (namedFiles.length > 0) {
+    const fileList = formatCutOutputFiles(namedFiles);
+    return `rumdl check output exceeded the ${String(rumdlOutputLimitBytes)}-byte limit and was cut, so its findings could not be read (exit ${String(exitCode)}). Files reached in cut output: ${fileList}. Start of the output: ${start}. Repair: Fix the findings in ${fileList} (or run rumdl check on those files directly), then run ${canonicalRouteNames.noteCheck} again.`;
+  }
   return `rumdl check output exceeded the ${String(rumdlOutputLimitBytes)}-byte limit and was cut, so its findings could not be read (exit ${String(exitCode)}). Start of the output: ${start}. Repair: Run rumdl check on the wiki/ and templates/ folders directly to see the full output, fix the notes that produce the most findings, then run ${canonicalRouteNames.noteCheck} again.`;
 }
 
@@ -265,7 +284,12 @@ function judgeRun(state: RunState, checkRun: ProgramResult): RunVerdict {
     return refuseRun(
       state,
       facts,
-      cutOutputMessage(checkRun.exitCode, checkRun.stderr, checkRun.stdout),
+      cutOutputMessage(
+        checkRun.exitCode,
+        checkRun.stderr,
+        checkRun.stdout,
+        state.request.wikiRoot,
+      ),
     );
   }
   const parsedFindings = parseRumdlFindings(checkRun.stdout);
@@ -312,7 +336,7 @@ async function runOneBatch(
     return refuseRun(
       state,
       { exitCode: null, outputTruncated: true, timedOut: false },
-      cutOutputMessage(null, "", ""),
+      cutOutputMessage(null, "", "", state.request.wikiRoot),
     );
   }
   const checkRun = await request.programs.inspect({
