@@ -6,6 +6,7 @@
       "agent-wiki-core.command-discovery",
       "agent-wiki-core.discovery",
       "agent-wiki-core.dispatch",
+      "agent-wiki-core.family.check",
       "agent-wiki-core.family.list",
       "agent-wiki-core.full-discovery",
       "agent-wiki-core.help",
@@ -241,6 +242,131 @@
               },
               {
                 "commandIdentity": "agent-wiki-core.dispatch",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.family.check",
+              "route": ["family", "check"],
+              "summary": "Check every record in the wiki against the note contract and its family's heading rule.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [
+                {
+                  "name": "--wiki",
+                  "aliases": [],
+                  "summary": "Path to the wiki root: the folder that has the wiki/ folder inside it.",
+                  "required": true,
+                  "repeatable": false,
+                  "value": {
+                    "kind": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "choices": null,
+                    "pattern": null
+                  }
+                }
+              ],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.family.check",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.family.check",
+                "causeCode": "DOMAIN_PRECONDITION_UNMET",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.family.check",
+                "causeCode": "USAGE_INVALID_INVOCATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "usage",
+                "exitCode": 2,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.family.check",
+                "causeCode": "SCHEMA_INVALID_INPUT",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "schema",
+                "exitCode": 4,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.family.check",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.family.check",
                 "causeCode": "INTERNAL_RESULT_UNCHANGED",
                 "retryDelayPolicy": {
                   "kind": "none"
@@ -995,11 +1121,17 @@
       "installFindings": "value"
     },
     "./family": {
+      "Check": "type",
+      "CheckNoteOptions": "type",
       "Family": "type",
       "FamilyField": "type",
       "FamilyTable": "type",
+      "Finding": "type",
       "Heading": "type",
+      "NoteRules": "type",
       "Rename": "type",
+      "WikiRuleFinding": "type",
+      "checkNote": "value",
       "readFamilyTable": "value"
     },
     "./notes": {
