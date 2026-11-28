@@ -4,7 +4,6 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   realpathSync,
   renameSync,
@@ -12,7 +11,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { folderOf, parseNote } from "./markdown-sections.ts";
 import type { MarkdownFile, Note } from "./markdown-sections.ts";
 import { sha256Bytes, stagePathForMove } from "./note-hashes.ts";
@@ -25,6 +24,12 @@ import {
   parseRumdlExcludeGlobs,
 } from "./rumdl-config.ts";
 import type { ExcludeGlobsResult, OwnedFiles } from "./rumdl-config.ts";
+import {
+  readRootedBytesOptional,
+  readRootedTextOptional,
+  readRootedTextRequired,
+  walkWikiOrThrow,
+} from "./wiki-read.ts";
 import { ownedFolders, statIfPresent, walkWikiFiles } from "./wiki-walk.ts";
 
 export type RenameInputs = {
@@ -32,19 +37,6 @@ export type RenameInputs = {
   readonly texts: ReadonlyMap<string, string>;
   readonly paths: ReadonlySet<string>;
 };
-
-function filesUnder(folder: string): string[] {
-  if (!existsSync(folder)) return [];
-  return readdirSync(folder, { withFileTypes: true })
-    .sort((left, right) =>
-      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
-    )
-    .flatMap((item) => {
-      const path = join(folder, item.name);
-      if (item.isSymbolicLink()) return [];
-      return item.isDirectory() ? filesUnder(path) : [path];
-    });
-}
 
 export function canonicalWikiRoot(path: string): string {
   const absolute = resolve(path);
@@ -136,29 +128,23 @@ export function resolvePinnedRumdl(
   return isExecutableFile(shim) ? shim : null;
 }
 
-function filesInWikiRoot(wikiRoot: string, folder: string): string[] {
-  return filesUnder(join(wikiRoot, folder)).map((path) =>
-    relative(wikiRoot, path),
-  );
-}
-
 function readMarkdownFile(wikiRoot: string, path: string): MarkdownFile {
-  return parseNote(path, readFileSync(join(wikiRoot, path), "utf8"));
+  return parseNote(path, readRootedTextRequired(wikiRoot, path));
 }
 
 export function readFolderNotes(wikiRoot: string, folder: string): Note[] {
-  const directory = resolve(wikiRoot, folder);
-  if (!lstatSync(directory, { throwIfNoEntry: false })?.isDirectory())
-    return [];
-  return filesInWikiRoot(wikiRoot, folder)
-    .filter((path) => path.endsWith(".md"))
-    .map((path) => readMarkdownFile(wikiRoot, path));
+  return walkWikiOrThrow(wikiRoot, {
+    folders: [folder],
+    includeEntry: (name) => name.endsWith(".md"),
+  }).map((path) => readMarkdownFile(wikiRoot, path));
 }
 
 function wikiNotes(wikiRoot: string): Note[] {
-  return filesInWikiRoot(wikiRoot, "wiki")
-    .filter((path) => path.endsWith(".md") && !path.startsWith("wiki/meta/"))
-    .map((path) => readMarkdownFile(wikiRoot, path));
+  return walkWikiOrThrow(wikiRoot, {
+    folders: ["wiki"],
+    includeEntry: (name) => name.endsWith(".md"),
+    isExcluded: (path) => path.startsWith("wiki/meta/"),
+  }).map((path) => readMarkdownFile(wikiRoot, path));
 }
 
 export function readRecords(wikiRoot: string): Note[] {
@@ -170,29 +156,41 @@ export function readRecords(wikiRoot: string): Note[] {
 const configFile = ".claude-obsidian.json";
 
 export function readRenameInputs(wikiRoot: string): RenameInputs {
-  const wiki = filesInWikiRoot(wikiRoot, "wiki");
-  const templates = filesInWikiRoot(wikiRoot, "templates");
+  const wiki = walkWikiOrThrow(wikiRoot, {
+    folders: ["wiki"],
+    includeEntry: () => true,
+  });
+  const templates = walkWikiOrThrow(wikiRoot, {
+    folders: ["templates"],
+    includeEntry: () => true,
+  });
+  const manifests = walkWikiOrThrow(wikiRoot, {
+    folders: [".raw"],
+    includeEntry: (name) => name.endsWith(".manifest.json"),
+  });
   const referenced = [
     ...wiki.filter((path) => path.endsWith(".md") || path.endsWith(".json")),
     ...templates,
-    ...filesInWikiRoot(wikiRoot, ".raw").filter((path) =>
-      path.endsWith(".manifest.json"),
+    ...manifests,
+  ];
+  const texts = new Map<string, string>(
+    referenced.map((path) => [path, readRootedTextRequired(wikiRoot, path)]),
+  );
+  const configText = readRootedTextOptional(wikiRoot, configFile);
+  if (configText !== null) {
+    texts.set(configFile, configText);
+  }
+  const markdownPaths = [
+    ...wiki.filter(
+      (path) => path.endsWith(".md") && !path.startsWith("wiki/meta/"),
     ),
-    ...(existsSync(join(wikiRoot, configFile)) ? [configFile] : []),
+    ...templates.filter((path) => path.endsWith(".md")),
   ];
   return {
-    markdownFiles: [
-      ...wikiNotes(wikiRoot),
-      ...templates
-        .filter((path) => path.endsWith(".md"))
-        .map((path) => readMarkdownFile(wikiRoot, path)),
-    ],
-    texts: new Map(
-      referenced.map((path) => [
-        path,
-        readFileSync(join(wikiRoot, path), "utf8"),
-      ]),
+    markdownFiles: markdownPaths.map((path) =>
+      parseNote(path, texts.get(path) ?? ""),
     ),
+    texts,
     paths: new Set([...wiki, ...templates]),
   };
 }
@@ -201,8 +199,7 @@ export function readTextIfExists(
   wikiRoot: string,
   relativePath: string,
 ): string | null {
-  const full = join(wikiRoot, relativePath);
-  return existsSync(full) ? readFileSync(full, "utf8") : null;
+  return readRootedTextOptional(wikiRoot, relativePath);
 }
 
 export function pathExistsInWiki(
@@ -231,13 +228,13 @@ export function readWikiMarkdownTexts(
   wikiRoot: string,
   excludeFolder: string,
 ): ReadonlyMap<string, string> {
-  const paths = ownedFolders.flatMap((folder) =>
-    filesInWikiRoot(wikiRoot, folder).filter(
-      (path) => isRumdlMarkdownName(path) && folderOf(path) !== excludeFolder,
-    ),
-  );
+  const paths = walkWikiOrThrow(wikiRoot, {
+    folders: ownedFolders,
+    includeEntry: (name) => isRumdlMarkdownName(name),
+    isExcluded: (path) => folderOf(path) === excludeFolder,
+  });
   return new Map(
-    paths.map((path) => [path, readFileSync(join(wikiRoot, path), "utf8")]),
+    paths.map((path) => [path, readRootedTextRequired(wikiRoot, path)]),
   );
 }
 
@@ -264,15 +261,19 @@ export function readBytesInWiki(
   wikiRoot: string,
   relativePath: string,
 ): Buffer {
-  return readFileSync(join(wikiRoot, relativePath));
+  const bytes = readRootedBytesOptional(wikiRoot, relativePath);
+  if (bytes === null) {
+    throw new Error(`Missing file in wiki: ${relativePath}`);
+  }
+  return bytes;
 }
 
 export function sha256InWiki(
   wikiRoot: string,
   relativePath: string,
 ): string | null {
-  const full = join(wikiRoot, relativePath);
-  return isFile(full) ? sha256Bytes(readFileSync(full)) : null;
+  const bytes = readRootedBytesOptional(wikiRoot, relativePath);
+  return bytes === null ? null : sha256Bytes(bytes);
 }
 
 export function entryExistsInWiki(

@@ -1,6 +1,8 @@
-import { lstatSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { readFamilyTable } from "../shared/family-table.ts";
+import {
+  readRootedTextRequired,
+  walkWikiOrThrow,
+} from "../shared/wiki-read.ts";
 import { renderFamilyTemplates } from "./rules.ts";
 import type { InstalledFamilyTemplate } from "./rules.ts";
 
@@ -17,40 +19,24 @@ export function loadRenderedFamilyTemplates(wikiRoot: string):
   return { ok: true, familyTemplates: renderFamilyTemplates(loaded.table) };
 }
 
-function walkTemplates(
-  directory: string,
-  prefix: string,
-): InstalledFamilyTemplate[] {
-  const items = readdirSync(directory, { withFileTypes: true }).sort(
-    (left, right) =>
-      left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
-  );
-  const results: InstalledFamilyTemplate[] = [];
-  for (const item of items) {
-    if (item.isSymbolicLink()) continue;
-    const fullPath = join(directory, item.name);
-    const relativePath = `${prefix}/${item.name}`;
-    if (item.isDirectory()) {
-      if (item.name.endsWith(".md")) {
-        results.push({ path: relativePath, text: null });
-      } else {
-        results.push(...walkTemplates(fullPath, relativePath));
-      }
-    } else if (item.isFile() && item.name.endsWith(".md")) {
-      results.push({
-        path: relativePath,
-        text: readFileSync(fullPath, "utf8"),
-      });
-    }
-  }
-  return results;
-}
-
 export function readInstalledFamilyTemplates(
   wikiRoot: string,
 ): InstalledFamilyTemplate[] {
-  const folder = join(wikiRoot, "templates");
-  const info = lstatSync(folder, { throwIfNoEntry: false });
-  if (info === undefined || !info.isDirectory()) return [];
-  return walkTemplates(folder, "templates");
+  const folderTemplates: InstalledFamilyTemplate[] = [];
+  const filePaths = walkWikiOrThrow(wikiRoot, {
+    folders: ["templates"],
+    includeEntry: (name) => name.endsWith(".md"),
+    handleDirectory: (name, wikiRelativePath) => {
+      if (!name.endsWith(".md")) return "traverse";
+      folderTemplates.push({ path: wikiRelativePath, text: null });
+      return "stop";
+    },
+  });
+  const fileTemplates: InstalledFamilyTemplate[] = filePaths.map((path) => ({
+    path,
+    text: readRootedTextRequired(wikiRoot, path),
+  }));
+  return [...fileTemplates, ...folderTemplates].sort((left, right) =>
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
+  );
 }

@@ -39,3 +39,4 @@ export type {
 } from "../shared/markdown-sections.ts";
 export { sha256Bytes } from "../shared/note-hashes.ts";
 export { baseFields } from "../shared/rules.ts";
+export { WikiReadRefusal } from "../shared/wiki-read.ts";

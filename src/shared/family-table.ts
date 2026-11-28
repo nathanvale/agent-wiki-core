@@ -1,8 +1,8 @@
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { familyTableFrom } from "../family-table/rules.ts";
 import type { FamilyTable } from "../family-table/rules.ts";
-import { errorCode, errorReason } from "./rumdl-config.ts";
+import { errorReason } from "./rumdl-config.ts";
+import { readRootedTextOptional } from "./wiki-read.ts";
 
 const familyTableFileName = "family-table.json";
 
@@ -12,15 +12,9 @@ export function readFamilyTable(
   | { readonly ok: true; readonly table: FamilyTable }
   | { readonly ok: false; readonly path: string; readonly detail: string } {
   const path = join(wikiRoot, familyTableFileName);
-  let raw: string;
-  try {
-    raw = readFileSync(path, "utf8");
-  } catch (error) {
-    const detail =
-      errorCode(error) === "ENOENT"
-        ? "File does not exist."
-        : `Could not read file: ${errorReason(error)}`;
-    return { ok: false, path, detail };
+  const raw = readRootedTextOptional(wikiRoot, familyTableFileName);
+  if (raw === null) {
+    return { ok: false, path, detail: "File does not exist." };
   }
   let parsed: unknown;
   try {

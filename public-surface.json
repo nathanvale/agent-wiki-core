@@ -1393,6 +1393,7 @@
       "MarkdownSection": "type",
       "Note": "type",
       "RenameInputs": "type",
+      "WikiReadRefusal": "value",
       "applyMovesOnDisk": "value",
       "applyTextUpdatesOnDisk": "value",
       "asWritten": "value",

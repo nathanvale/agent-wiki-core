@@ -81,6 +81,23 @@ export function spawnCoreCliJson(
   return spawnCliJson(join(root, "src/cli.ts"), args, options);
 }
 
+export function makeNamedPipe(
+  pipePath: string,
+  timeoutMilliseconds = 10_000,
+): void {
+  const created = Bun.spawnSync(["mkfifo", pipePath], {
+    stdout: "pipe",
+    stderr: "pipe",
+    timeout: timeoutMilliseconds,
+    killSignal: "SIGKILL",
+  });
+  if (created.exitCode !== 0) {
+    throw new Error(
+      `mkfifo failed for ${pipePath}: ${created.stderr.toString()}`,
+    );
+  }
+}
+
 export function fingerprint(folder: string): string {
   const walk = (path: string): string[] =>
     readdirSync(path)
