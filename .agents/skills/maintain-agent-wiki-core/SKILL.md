@@ -44,7 +44,7 @@ Done when `.changeset/` holds a non-empty changeset for the shipped pointer chan
 Measure `GLOSSARY.md` against its 5,000-token cap with `tiktoken`'s `cl100k_base` encoding from a temporary install whenever `GLOSSARY.md` changes:
 
 ```sh
-(tmp=$(mktemp -d) && trap 'rm -rf "$tmp"' EXIT && bun add --cwd "$tmp" --silent tiktoken && NODE_PATH="$tmp/node_modules" bun -e 'const { get_encoding } = await import("tiktoken"); console.log(get_encoding("cl100k_base").encode(await Bun.file("GLOSSARY.md").text()).length)')
+(tmp=$(mktemp -d) && trap 'rm -rf "$tmp"' EXIT && cp GLOSSARY.md "$tmp/GLOSSARY.md" && bun add --cwd "$tmp" --silent tiktoken && bun --cwd "$tmp" -e 'const { get_encoding } = await import("tiktoken"); console.log(get_encoding("cl100k_base").encode(await Bun.file("GLOSSARY.md").text()).length)')
 ```
 
 If the count exceeds 5,000, move entries word for word into context glossaries pointed to by `GLOSSARY-MAP.md` instead of shortening or dropping definitions.
