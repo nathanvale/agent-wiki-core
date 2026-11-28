@@ -1,5 +1,15 @@
 import type { baseFields } from "../shared/rules.ts";
 import {
+  checkNoteNames,
+  checkTableSettings,
+  tableSettingKeys,
+} from "./settings/rules.ts";
+import type {
+  Check,
+  NoteNamesSetting,
+  TableSettings,
+} from "./settings/rules.ts";
+import {
   checkAfterVariants,
   checkFamilyVariantRules,
   checkVariants,
@@ -33,9 +43,10 @@ export type Family = {
   readonly familyFields: readonly FamilyField[];
   readonly headings: readonly Heading[];
   readonly variants?: readonly Variant[];
+  readonly noteNames?: NoteNamesSetting;
 };
 
-export type FamilyTable = {
+export type FamilyTable = TableSettings & {
   readonly baseTag: string | null;
   readonly discoveryTags: readonly string[] | null;
   readonly tagLimit: number | null;
@@ -47,11 +58,8 @@ export type FamilyTable = {
   readonly families: readonly Family[];
 };
 
-type Check<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly detail: string };
-
 const tableKeys = new Set([
+  ...tableSettingKeys,
   "baseTag",
   "discoveryTags",
   "tagLimit",
@@ -69,6 +77,7 @@ const familyKeys = new Set([
   "familyFields",
   "headings",
   "variants",
+  "noteNames",
 ]);
 const familyFieldKeys = new Set(["name", "value"]);
 const headingKeys = new Set(["name", "hint", "optional", "afterVariants"]);
@@ -344,13 +353,18 @@ function checkFamily(value: unknown, prefix: string): Check<Family> {
     variants.value,
   );
   if (variantRuleFailure !== null) return fail(variantRuleFailure);
-  return ok({
+  const rawNoteNames = record["noteNames"];
+  const base: Family = {
     family: family.value,
     folder: folder.value,
     familyFields: familyFields.value,
     headings: headings.value,
     ...(variants.value === undefined ? {} : { variants: variants.value }),
-  });
+  };
+  if (rawNoteNames === undefined) return ok(base);
+  const noteNames = checkNoteNames(rawNoteNames, `${prefix}.noteNames`);
+  if (!noteNames.ok) return noteNames;
+  return ok({ ...base, noteNames: noteNames.value });
 }
 
 function checkFamilies(value: unknown): Check<readonly Family[]> {
@@ -374,6 +388,8 @@ export function familyTableFrom(
   const unknown = checkAllowedKeys(record, tableKeys, "");
   if (unknown !== null) return { ok: false, detail: unknown };
 
+  const settings = checkTableSettings(record);
+  if (!settings.ok) return settings;
   const baseTag = nullableString(record["baseTag"], "baseTag", null);
   if (!baseTag.ok) return baseTag;
   const discoveryTags = nullableStringList(
@@ -416,6 +432,7 @@ export function familyTableFrom(
   return {
     ok: true,
     table: {
+      ...settings.value,
       baseTag: baseTag.value,
       discoveryTags: discoveryTags.value,
       tagLimit: tagLimit.value,

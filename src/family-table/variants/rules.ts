@@ -1,3 +1,5 @@
+import type { Check } from "../settings/rules.ts";
+
 export type VariantHeading = {
   readonly name: string;
   readonly hint?: string;
@@ -7,10 +9,6 @@ export type Variant = {
   readonly name: string;
   readonly headings: readonly VariantHeading[];
 };
-
-type Check<T> =
-  | { readonly ok: true; readonly value: T }
-  | { readonly ok: false; readonly detail: string };
 
 export type VariantCheckHelpers = {
   readonly toRecord: (value: unknown) => Record<string, unknown> | null;

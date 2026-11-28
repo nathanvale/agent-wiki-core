@@ -1,5 +1,6 @@
 import { folderOf } from "../../shared/rules.ts";
 import type { Note } from "../../shared/rules.ts";
+import type { UndeclaredFoldersSetting } from "../settings/rules.ts";
 
 type PlacementFamily = {
   readonly family: string;
@@ -9,8 +10,19 @@ type PlacementFamily = {
 type PlacementTable<F extends PlacementFamily> = {
   readonly unfiledFolder: string | null;
   readonly familyFreeFolders: readonly string[];
+  readonly undeclaredFolders: UndeclaredFoldersSetting;
   readonly reservedFamilies: Readonly<Record<string, string>>;
   readonly families: readonly F[];
+};
+
+type FolderPlacement<
+  F extends PlacementFamily,
+  K extends "family-free" | "unknown-folder",
+> = {
+  readonly kind: K;
+  readonly folder: string;
+  readonly expectedFamily: null;
+  readonly effectiveFamily: F | null;
 };
 
 type NotePlacement<F extends PlacementFamily> =
@@ -26,21 +38,11 @@ type NotePlacement<F extends PlacementFamily> =
       readonly expectedFamily: string;
       readonly effectiveFamily: F | null;
     }
-  | {
-      readonly kind: "family-free";
-      readonly folder: string;
-      readonly expectedFamily: null;
-      readonly effectiveFamily: F | null;
-    }
+  | FolderPlacement<F, "family-free">
+  | FolderPlacement<F, "unknown-folder">
   | {
       readonly kind: "wiki-folder";
       readonly folder: null;
-      readonly expectedFamily: null;
-      readonly effectiveFamily: F | null;
-    }
-  | {
-      readonly kind: "unknown-folder";
-      readonly folder: string;
       readonly expectedFamily: null;
       readonly effectiveFamily: F | null;
     };
@@ -96,18 +98,10 @@ export function placementOf<F extends PlacementFamily>(
       };
     }
   }
-  if (table.familyFreeFolders.includes(folder)) {
-    return {
-      kind: "family-free",
-      folder,
-      expectedFamily: null,
-      effectiveFamily: noteFamily,
-    };
-  }
-  return {
-    kind: "unknown-folder",
-    folder,
-    expectedFamily: null,
-    effectiveFamily: noteFamily,
-  };
+  const kind =
+    table.familyFreeFolders.includes(folder) ||
+    table.undeclaredFolders === "family-free"
+      ? "family-free"
+      : "unknown-folder";
+  return { kind, folder, expectedFamily: null, effectiveFamily: noteFamily };
 }
