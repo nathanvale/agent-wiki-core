@@ -8,6 +8,7 @@ import {
   readPackageExports,
 } from "../scripts/record-public-surface.ts";
 import type { PublicSurface } from "../scripts/record-public-surface.ts";
+import { parseJsonRecord, readObject } from "./support/json.ts";
 import { root } from "./support/wiki.ts";
 
 function packageImportSpecifier(packageName: string, subpath: string): string {
@@ -15,8 +16,11 @@ function packageImportSpecifier(packageName: string, subpath: string): string {
   return `${packageName}/${subpath.replace(/^\.\//, "")}`;
 }
 
-function readRecordedSurface(): unknown {
-  return JSON.parse(readFileSync(join(root, publicSurfaceFile), "utf8"));
+function readRecordedSurface(): Record<string, unknown> {
+  return parseJsonRecord(
+    readFileSync(join(root, publicSurfaceFile), "utf8"),
+    publicSurfaceFile,
+  );
 }
 
 test("recorded public-surface.json matches the live CLI, exports, header fields, environment variables and skills", () => {
@@ -27,8 +31,16 @@ test("recorded public-surface.json matches the live CLI, exports, header fields,
 
 test("each package.json exports entry imports by package name and matches its recorded runtime value exports", async () => {
   const { packageName, entries } = readPackageExports(root);
+  const recorded = readRecordedSurface();
+  const recordedExports = readObject(
+    recorded["exports"],
+    `${publicSurfaceFile}.exports`,
+    (record) => record,
+  );
+  expect(entries.map((entry) => entry.subpath)).toEqual(
+    Object.keys(recordedExports).toSorted(compareCodepoints),
+  );
   expect(entries.length).toBeGreaterThan(0);
-  const live = buildPublicSurface(root);
 
   for (const entry of entries) {
     const specifier = packageImportSpecifier(packageName, entry.subpath);
@@ -39,9 +51,12 @@ test("each package.json exports entry imports by package name and matches its re
     const runtimeNames = Object.keys(loaded)
       .filter((key) => key !== "default")
       .toSorted(compareCodepoints);
-    const entrySymbols = live.exports[entry.subpath];
-    expect(entrySymbols).toBeDefined();
-    const recordedValues = Object.entries(entrySymbols ?? {})
+    const entrySymbols = readObject(
+      recordedExports[entry.subpath],
+      `${publicSurfaceFile}.exports[${entry.subpath}]`,
+      (record) => record,
+    );
+    const recordedValues = Object.entries(entrySymbols)
       .filter(([, kind]) => kind === "value")
       .map(([name]) => name)
       .toSorted(compareCodepoints);
