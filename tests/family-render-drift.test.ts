@@ -91,7 +91,7 @@ describe("family render --wiki", () => {
     expect<readonly string[]>(alwaysRenderedFields).toEqual(expectedBaseFields);
   });
 
-  test("renders one template per variant and no plain template, with variant after tags and afterVariants headings last", () => {
+  test("renders one family template per variant and no plain family template, with variant after tags and afterVariants headings last", () => {
     const wiki = familyWikiFixture({ table: variantFamilyTable });
     const run = runCoreCli(["family", "render", "--wiki", wiki]);
 
@@ -259,7 +259,7 @@ describe("family drift --wiki", () => {
     });
   });
 
-  test("reports zero findings when installed variant templates match the render", () => {
+  test("reports zero findings when installed variant family templates match the render", () => {
     const wiki = familyWikiFixture({
       table: variantFamilyTable,
       templates: {
@@ -277,7 +277,7 @@ describe("family drift --wiki", () => {
     expect(run.envelope.result.data).toEqual({ findings: [] });
   });
 
-  test("reports template-unexpected when a plain template exists for a family with variants", () => {
+  test("reports template-unexpected when a plain family template exists for a family with variants", () => {
     const wiki = familyWikiFixture({
       table: variantFamilyTable,
       templates: {
@@ -301,7 +301,7 @@ describe("family drift --wiki", () => {
     });
   });
 
-  test("reports template-missing when one variant template is absent", () => {
+  test("reports template-missing when one variant family template is absent", () => {
     const wiki = familyWikiFixture({
       table: variantFamilyTable,
       templates: {
