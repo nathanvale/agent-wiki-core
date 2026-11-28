@@ -32,7 +32,12 @@ function changedPaths(...range: readonly string[]): string[] {
 }
 
 function isGatedPath(path: string): boolean {
-  return path === "package.json" || path.startsWith("src/");
+  return (
+    path === "package.json" ||
+    path === "public-surface.json" ||
+    path.startsWith("src/") ||
+    path.startsWith("skills/")
+  );
 }
 
 const mergeBase = git("merge-base", baseRef, "HEAD").trim();

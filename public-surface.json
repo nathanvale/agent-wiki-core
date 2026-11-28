@@ -1,0 +1,928 @@
+{
+  "discovery": {
+    "contractVersion": "3.0.0",
+    "message": "Full discovery data for this CLI.",
+    "availablePaths": [
+      "agent-wiki-core.command-discovery",
+      "agent-wiki-core.discovery",
+      "agent-wiki-core.dispatch",
+      "agent-wiki-core.full-discovery",
+      "agent-wiki-core.help",
+      "agent-wiki-core.note.check",
+      "agent-wiki-core.status",
+      "agent-wiki-core.version"
+    ],
+    "result": {
+      "data": {
+        "contractVersion": "3.0.0",
+        "stationProseSource": "Run --discover-command <identity> for trigger, guidance and repairAction.",
+        "commands": [
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.command-discovery",
+              "route": ["--discover-command"],
+              "summary": "Discover one command.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [
+                {
+                  "name": "commandIdentity",
+                  "summary": "Canonical command identity.",
+                  "required": true,
+                  "value": {
+                    "kind": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "choices": null,
+                    "pattern": null
+                  }
+                }
+              ],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.command-discovery",
+                "causeCode": "USAGE_UNKNOWN_COMMAND",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "usage",
+                "exitCode": 2,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.command-discovery",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.command-discovery",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.command-discovery",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.discovery",
+              "route": ["--discover"],
+              "summary": "Discover commands.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.discovery",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.discovery",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.discovery",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.dispatch",
+              "route": [],
+              "summary": "Resolve an invocation.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.dispatch",
+                "causeCode": "USAGE_INVALID_INVOCATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "usage",
+                "exitCode": 2,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.dispatch",
+                "causeCode": "USAGE_UNKNOWN_COMMAND",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "usage",
+                "exitCode": 2,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.dispatch",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.dispatch",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.full-discovery",
+              "route": ["--discover-all"],
+              "summary": "Discover all commands.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.full-discovery",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.full-discovery",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.full-discovery",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.help",
+              "route": ["--help"],
+              "summary": "Show help.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.help",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.help",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.help",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.note.check",
+              "route": ["note", "check"],
+              "summary": "Check Markdown in the wiki folder and family templates with pinned rumdl, reporting findings with repairs. It writes nothing.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [
+                {
+                  "name": "--wiki",
+                  "aliases": [],
+                  "summary": "Path to the wiki root: the folder that has the wiki/ folder inside it.",
+                  "required": true,
+                  "repeatable": false,
+                  "value": {
+                    "kind": "string",
+                    "minLength": 1,
+                    "maxLength": 4096,
+                    "choices": null,
+                    "pattern": null
+                  }
+                }
+              ],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_PRECONDITION_UNMET",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_LINTER_MISSING",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_LINTER_VERSION_MISMATCH",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_LINTER_FAILED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_CHECK_BUDGET_EXCEEDED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_BROKEN_LINKS",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_HEADING_STRUCTURE",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_LIST_AND_TABLE_FORMAT",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_CODE_AND_INLINE_SYNTAX",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_WHITESPACE_AND_ENCODING",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "DOMAIN_NOTES_UNMAPPED_RULE",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "domain",
+                "exitCode": 3,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "USAGE_INVALID_INVOCATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "usage",
+                "exitCode": 2,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "SCHEMA_INVALID_INPUT",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "schema",
+                "exitCode": 4,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.note.check",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.status",
+              "route": ["status"],
+              "summary": "Report that this command-line tool runs.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.status",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.status",
+                "causeCode": "USAGE_INVALID_INVOCATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "usage",
+                "exitCode": 2,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.status",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.status",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          },
+          {
+            "command": {
+              "commandIdentity": "agent-wiki-core.version",
+              "route": ["--version"],
+              "summary": "Show the version.",
+              "effectClass": "inspect"
+            },
+            "semantics": "possible-outcomes",
+            "ifNoResult": null,
+            "input": {
+              "arguments": [],
+              "options": [],
+              "constraints": [],
+              "deadlineSupported": false,
+              "additionalArguments": false,
+              "additionalOptions": false
+            },
+            "stations": [
+              {
+                "commandIdentity": "agent-wiki-core.version",
+                "causeCode": "SUCCESS_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "success",
+                "transactionState": "unchanged",
+                "failureClass": null,
+                "exitCode": 0,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.version",
+                "causeCode": "INTERNAL_PREPARATION",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "refused",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              },
+              {
+                "commandIdentity": "agent-wiki-core.version",
+                "causeCode": "INTERNAL_RESULT_UNCHANGED",
+                "retryDelayPolicy": {
+                  "kind": "none"
+                },
+                "reachability": "required",
+                "unreachableRationale": null,
+                "outcome": "failed",
+                "transactionState": "unchanged",
+                "failureClass": "internal",
+                "exitCode": 1,
+                "retryable": false,
+                "effectClass": "inspect"
+              }
+            ]
+          }
+        ],
+        "exitMeanings": {
+          "0": "success",
+          "1": "internal",
+          "2": "usage",
+          "3": "domain",
+          "4": "schema",
+          "75": "transient"
+        },
+        "signalExits": {
+          "130": "SIGINT",
+          "143": "SIGTERM"
+        },
+        "effectExclusions": [
+          "Incidental journal maintenance.",
+          "Incidental diagnostic maintenance."
+        ]
+      },
+      "effects": {
+        "completed": [],
+        "remaining": [],
+        "uncertain": [],
+        "inventoryComplete": true
+      },
+      "outcome": "success",
+      "transactionState": "unchanged",
+      "failureClass": null,
+      "exitCode": 0,
+      "retryable": false,
+      "commandIdentity": "agent-wiki-core.full-discovery",
+      "causeCode": "SUCCESS_UNCHANGED",
+      "effectClass": "inspect",
+      "repairAction": null,
+      "next": {
+        "kind": "done"
+      }
+    }
+  },
+  "exports": {
+    "./commands": {
+      "WikiCoreOptions": "type",
+      "noInput": "value",
+      "noInputCommand": "value",
+      "noWikiRoot": "value",
+      "preconditionUnmet": "value",
+      "programPath": "value",
+      "refused": "value",
+      "report": "value",
+      "stringOption": "value",
+      "succeeded": "value",
+      "usePathParser": "value",
+      "wikiCoreCauses": "value",
+      "wikiCoreFor": "value",
+      "wikiInput": "value",
+      "wikiOption": "value",
+      "wikiReadCommand": "value",
+      "wikiStations": "value"
+    },
+    "./consumer-guard": {
+      "InstallFinding": "type",
+      "InstallFindingKind": "type",
+      "installFindings": "value"
+    },
+    "./notes": {
+      "FamilyTemplateFile": "type",
+      "MarkdownFile": "type",
+      "MarkdownSection": "type",
+      "Note": "type",
+      "RenameInputs": "type",
+      "applyMovesOnDisk": "value",
+      "applyTextUpdatesOnDisk": "value",
+      "asWritten": "value",
+      "baseFields": "value",
+      "blockingParentPath": "value",
+      "bodyOf": "value",
+      "canonicalWikiRoot": "value",
+      "entryExistsInWiki": "value",
+      "folderOf": "value",
+      "isFile": "value",
+      "isWikiRoot": "value",
+      "normalized": "value",
+      "parseHeader": "value",
+      "parseNote": "value",
+      "pathExistsInWiki": "value",
+      "rawSectionsOf": "value",
+      "readBytesInWiki": "value",
+      "readFamilyTemplates": "value",
+      "readFolderNotes": "value",
+      "readRecords": "value",
+      "readRenameInputs": "value",
+      "readTextIfExists": "value",
+      "readWikiMarkdownTexts": "value",
+      "removeInWiki": "value",
+      "sectionBodies": "value",
+      "sectionsOf": "value",
+      "sha256Bytes": "value",
+      "sha256InWiki": "value",
+      "splitMarkdownSections": "value",
+      "verifyMovesOnDisk": "value",
+      "verifyTextUpdatesOnDisk": "value",
+      "writeBytesInWiki": "value"
+    }
+  },
+  "headerFields": {
+    "aliases": "list",
+    "created": "date",
+    "family": "string",
+    "record_id": "string",
+    "replaced_by": "string",
+    "summary": "string",
+    "tags": "list",
+    "title": "string"
+  },
+  "environmentVariables": [
+    "WIKI_NOTES_CHECK_BUDGET_MS",
+    "WIKI_NOTES_CHECK_TIMEOUT_MS",
+    "WIKI_RUMDL_CONFIG_PATH",
+    "WIKI_RUMDL_PATH"
+  ],
+  "skills": ["skills/wiki/SKILL.md", "skills/wiki/pointer/SKILL.md"]
+}

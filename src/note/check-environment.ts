@@ -6,6 +6,13 @@ import {
 
 export type NotesEnvironment = Readonly<Record<string, string | undefined>>;
 
+export const noteCheckEnvironmentVariables = {
+  rumdlPath: "WIKI_RUMDL_PATH",
+  configPath: "WIKI_RUMDL_CONFIG_PATH",
+  budgetMilliseconds: "WIKI_NOTES_CHECK_BUDGET_MS",
+  timeoutMilliseconds: "WIKI_NOTES_CHECK_TIMEOUT_MS",
+} as const;
+
 type ParsedOverride<Value> = {
   readonly value: Value;
   readonly problem: string | null;
@@ -56,22 +63,22 @@ export function parseNoteCheckEnvironment(
 ): NotesOverrides {
   const rumdlPath = pathOverride(
     environment,
-    "WIKI_RUMDL_PATH",
+    noteCheckEnvironmentVariables.rumdlPath,
     "the pinned rumdl",
   );
   const configPath = pathOverride(
     environment,
-    "WIKI_RUMDL_CONFIG_PATH",
+    noteCheckEnvironmentVariables.configPath,
     "the repository .rumdl.toml",
   );
   const budget = millisecondsOverride(
     environment,
-    "WIKI_NOTES_CHECK_BUDGET_MS",
+    noteCheckEnvironmentVariables.budgetMilliseconds,
     defaultNotesBudgetMilliseconds,
   );
   const timeout = millisecondsOverride(
     environment,
-    "WIKI_NOTES_CHECK_TIMEOUT_MS",
+    noteCheckEnvironmentVariables.timeoutMilliseconds,
     defaultNotesTimeoutMilliseconds,
   );
   return {
