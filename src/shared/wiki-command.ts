@@ -136,7 +136,7 @@ export function report(message: string, data: unknown) {
   return { message, data: json(data), effects: unchanged } as const;
 }
 
-export type CommandSpec<Identity extends string> = {
+type CommandSpec<Identity extends string> = {
   readonly identity: Identity;
   readonly route: readonly string[];
   readonly summary: string;

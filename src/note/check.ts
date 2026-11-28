@@ -1,7 +1,8 @@
 import { command, commonCauses, station } from "agent-cli-kernel";
 import { notesCauses } from "./causes.ts";
 import { defaultNotesBudgetMilliseconds, runNoteCheck } from "./check-run.ts";
-import { noteCheckOverrides } from "./check-environment.ts";
+import { parseNoteCheckEnvironment } from "./check-environment.ts";
+import type { NotesEnvironment } from "./check-environment.ts";
 import { pinnedRumdlVersion } from "./rules.ts";
 import { canonicalWikiRoot } from "../shared/markdown-files.ts";
 import { programPath } from "../shared/program-path.ts";
@@ -19,8 +20,16 @@ const stationWords = {
   unreachableRationale: null,
 } as const;
 
-export function noteCheckFor(cli: string, repoRoot: string) {
-  const noteCheckIdentity = `${cli}.note.check`;
+export type NoteCheckOptions = {
+  readonly repoRoot: string;
+  readonly environment: NotesEnvironment;
+};
+
+export function noteCheckFor<const Cli extends string>(
+  cli: Cli,
+  options: NoteCheckOptions,
+) {
+  const noteCheckIdentity: `${Cli}.note.check` = `${cli}.note.check`;
 
   const noteCheckStations = [
     station(noteCheckCauses, {
@@ -109,11 +118,11 @@ export function noteCheckFor(cli: string, repoRoot: string) {
       commandIdentity: noteCheckIdentity,
       causeCode: "DOMAIN_NOTES_BROKEN_LINKS",
       trigger: "One or more notes contain broken or malformed links.",
-      repairAction: `Point each broken link at an existing record using ${canonicalRouteNames.recordFind}, fix malformed link syntax, or remove the link, then run ${canonicalRouteNames.noteCheck} again.`,
+      repairAction: `Point each broken link at an existing note, fix malformed link syntax, or remove the link, then run ${canonicalRouteNames.noteCheck} again.`,
       guidance: {
         next: {
           kind: "instruction",
-          text: `Apply each link Repair named in the message (use ${canonicalRouteNames.recordFind} to locate an existing record), then run ${canonicalRouteNames.noteCheck} again.`,
+          text: `Apply each link Repair named in the message (point it at an existing note), then run ${canonicalRouteNames.noteCheck} again.`,
         },
       },
       independentObservable: `${noteCheckIdentity}:broken-links`,
@@ -204,7 +213,7 @@ export function noteCheckFor(cli: string, repoRoot: string) {
     capabilities: { programs: true, diagnostics: true },
     stations: noteCheckStations,
     run: async (input, context) => {
-      const overrides = noteCheckOverrides();
+      const overrides = parseNoteCheckEnvironment(options.environment);
       if (overrides.problems.length > 0) {
         return context.result(
           {
@@ -216,7 +225,7 @@ export function noteCheckFor(cli: string, repoRoot: string) {
         );
       }
       const outcome = await runNoteCheck({
-        repoRoot,
+        repoRoot: options.repoRoot,
         wikiRoot: canonicalWikiRoot(input["--wiki"]),
         rumdlOverride: overrides.rumdlPath,
         configOverride: overrides.configPath,

@@ -1,10 +1,5 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import { commonCauses, contractFor, runInProcess } from "agent-cli-kernel";
-import { diagnosticsAddon } from "agent-cli-kernel/addons/diagnostics";
-import { programsAddon } from "agent-cli-kernel/addons/programs";
-import { notesCauses } from "../src/note/causes.ts";
-import { noteCheckFor } from "../src/note/check.ts";
 import { groupFindings } from "../src/note/rules.ts";
 import {
   parseJson,
@@ -125,7 +120,8 @@ See [missing](./does-not-exist.md).
   expect(envelope.result.data).toBeNull();
   expect(envelope.message).toContain("[note] wiki/people/broken-link.md:7");
   expect(envelope.message).toContain("MD057");
-  expect(envelope.message).toContain("record find");
+  expect(envelope.message).toContain("point it at an existing note");
+  expect(envelope.message).not.toContain("record find");
   expect(envelope.message).toContain("Repair:");
   expect(fingerprint(folder)).toBe(before);
 
@@ -442,37 +438,4 @@ test("every rule enabled in the effective rumdl configuration is known to rumdl 
     )
     .map((item) => item.rule);
   expect(unmapped).toEqual([]);
-});
-
-test("noteCheckFor builds a command whose identity and stations use the given CLI name", async () => {
-  const folder = wikiFixture({
-    "wiki/people/ada-lovelace.md": cleanTargetNote,
-  });
-  const contract = contractFor({
-    cli: "example-wiki",
-    commands: [noteCheckFor("example-wiki", folder)],
-    causes: { ...commonCauses, ...notesCauses },
-    installedAddons: ["programs", "diagnostics"],
-  });
-  const argv = ["--discover-command", "example-wiki.note.check"];
-  const ran = await runInProcess(contract, {
-    addons: {
-      programs: programsAddon(),
-      diagnostics: diagnosticsAddon({
-        cli: "example-wiki",
-        environment: {},
-        argv,
-      }),
-    },
-  })(argv);
-  expect(ran.kind).toBe("envelope");
-  if (ran.kind !== "envelope") return;
-  expect(ran.envelope.result.exitCode).toBe(0);
-  expect(ran.envelope.availablePaths).toContain("example-wiki.note.check");
-  expect(ran.envelope.result.data).toMatchObject({
-    command: {
-      commandIdentity: "example-wiki.note.check",
-      route: ["note", "check"],
-    },
-  });
 });

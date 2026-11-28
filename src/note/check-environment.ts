@@ -4,7 +4,7 @@ import {
   defaultNotesTimeoutMilliseconds,
 } from "./check-run.ts";
 
-type NotesEnvironment = Readonly<Record<string, string | undefined>>;
+export type NotesEnvironment = Readonly<Record<string, string | undefined>>;
 
 type ParsedOverride<Value> = {
   readonly value: Value;
@@ -17,14 +17,6 @@ type NotesOverrides = {
   readonly budgetMilliseconds: number;
   readonly timeoutMilliseconds: number;
   readonly problems: readonly string[];
-};
-
-let overrides: NotesOverrides = {
-  rumdlPath: undefined,
-  configPath: undefined,
-  budgetMilliseconds: defaultNotesBudgetMilliseconds,
-  timeoutMilliseconds: defaultNotesTimeoutMilliseconds,
-  problems: [],
 };
 
 const wholePositiveNumber = /^[1-9][0-9]*$/;
@@ -59,7 +51,9 @@ function millisecondsOverride(
   };
 }
 
-export function useNoteCheckEnvironment(environment: NotesEnvironment): void {
+export function parseNoteCheckEnvironment(
+  environment: NotesEnvironment,
+): NotesOverrides {
   const rumdlPath = pathOverride(
     environment,
     "WIKI_RUMDL_PATH",
@@ -80,7 +74,7 @@ export function useNoteCheckEnvironment(environment: NotesEnvironment): void {
     "WIKI_NOTES_CHECK_TIMEOUT_MS",
     defaultNotesTimeoutMilliseconds,
   );
-  overrides = {
+  return {
     rumdlPath: rumdlPath.value,
     configPath: configPath.value,
     budgetMilliseconds: budget.value,
@@ -89,8 +83,4 @@ export function useNoteCheckEnvironment(environment: NotesEnvironment): void {
       parsed.problem === null ? [] : [parsed.problem],
     ),
   };
-}
-
-export function noteCheckOverrides(): NotesOverrides {
-  return overrides;
 }
