@@ -142,23 +142,6 @@ type CommandSpec<Identity extends string> = {
   readonly summary: string;
 };
 
-export function noInputCommand<const Identity extends string>(
-  spec: CommandSpec<Identity>,
-  answer: () => { readonly message: string; readonly data: unknown },
-) {
-  return command({
-    identity: spec.identity,
-    route: spec.route,
-    summary: spec.summary,
-    input: noInput,
-    capabilities: {},
-    run: (_input, context) => {
-      const { message, data } = answer();
-      return context.result(succeeded(spec.identity), report(message, data));
-    },
-  });
-}
-
 type WikiReadAnswer =
   | { readonly kind?: "ok"; readonly message: string; readonly data: unknown }
   | { readonly kind: "refused"; readonly message: string };

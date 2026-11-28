@@ -8,7 +8,6 @@ export {
   isWikiRoot,
   pathExistsInWiki,
   readBytesInWiki,
-  readFamilyTemplates,
   readFolderNotes,
   readRecords,
   readRenameInputs,
@@ -20,10 +19,7 @@ export {
   verifyTextUpdatesOnDisk,
   writeBytesInWiki,
 } from "../shared/markdown-files.ts";
-export type {
-  FamilyTemplateFile,
-  RenameInputs,
-} from "../shared/markdown-files.ts";
+export type { RenameInputs } from "../shared/markdown-files.ts";
 export {
   asWritten,
   bodyOf,
