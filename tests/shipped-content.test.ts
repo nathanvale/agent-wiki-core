@@ -37,9 +37,18 @@ const reservedEmailSuffixes: readonly string[] = [
   ".localhost",
 ];
 
-const emailPattern =
-  /\b[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)\b/g;
-const tildeHomePathPattern = /(?<![\w./\\~])~\/[^\s"'`<>)\]*]*/g;
+const wordCharacterClass = "\\p{L}\\p{N}";
+const notPrecededByWord = `(?<![${wordCharacterClass}])`;
+const notFollowedByWord = `(?![${wordCharacterClass}])`;
+
+const emailPattern = new RegExp(
+  `${notPrecededByWord}[A-Za-z0-9][A-Za-z0-9._%+-]*@([A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+)${notFollowedByWord}`,
+  "gu",
+);
+const tildeHomePathPattern = new RegExp(
+  `(?<![${wordCharacterClass}./])~/(?:[^\\s)"'\`<>\\]*~_]|_(?=[${wordCharacterClass}]))*`,
+  "gu",
+);
 const homePathPatterns: readonly RegExp[] = [
   /\/Users\/[A-Za-z0-9._-]+/g,
   /\/home\/[A-Za-z0-9._-]+/g,
@@ -155,40 +164,17 @@ function emailFindings(
   return findings;
 }
 
-function homePathFindings(
+function patternFindings(
   file: string,
   lineNumber: number,
   line: string,
-): ShippedContentFinding[] {
-  const findings: ShippedContentFinding[] = [];
-  for (const pattern of homePathPatterns) {
-    for (const match of line.matchAll(pattern)) {
-      findings.push({
-        file,
-        line: lineNumber,
-        kind: "home-path",
-        match: match[0],
-      });
-    }
-  }
-  return findings;
-}
-
-function authorNameFindings(
-  file: string,
-  lineNumber: number,
-  line: string,
+  kind: "home-path" | "author-name",
   patterns: readonly RegExp[],
 ): ShippedContentFinding[] {
   const findings: ShippedContentFinding[] = [];
   for (const pattern of patterns) {
     for (const match of line.matchAll(pattern)) {
-      findings.push({
-        file,
-        line: lineNumber,
-        kind: "author-name",
-        match: match[0],
-      });
+      findings.push({ file, line: lineNumber, kind, match: match[0] });
     }
   }
   return findings;
@@ -212,7 +198,7 @@ function scanShippedContent(
   const authorPatterns = authorWords.map(
     (word) =>
       new RegExp(
-        `(?<![\\p{L}\\p{N}_])${escapeRegExp(word)}(?![\\p{L}\\p{N}_])`,
+        `${notPrecededByWord}${escapeRegExp(word)}${notFollowedByWord}`,
         "gu",
       ),
   );
@@ -223,8 +209,20 @@ function scanShippedContent(
       const lineNumber = index + 1;
       const lineFindings = [
         ...emailFindings(file, lineNumber, line),
-        ...homePathFindings(file, lineNumber, line),
-        ...authorNameFindings(file, lineNumber, line, authorPatterns),
+        ...patternFindings(
+          file,
+          lineNumber,
+          line,
+          "home-path",
+          homePathPatterns,
+        ),
+        ...patternFindings(
+          file,
+          lineNumber,
+          line,
+          "author-name",
+          authorPatterns,
+        ),
       ];
       for (const finding of lineFindings) {
         if (!isAllowed(finding, allowList)) {
@@ -443,38 +441,59 @@ test("scans examples/ when present and respects allow-list entries", () => {
   );
 });
 
-test("refuses tilde home paths after punctuation delimiters and accepts non-home tildes", () => {
-  const cases: readonly {
-    readonly line: string;
-    readonly expectedMatch: string | undefined;
-  }[] = [
-    { line: "<~/notes>", expectedMatch: "~/notes" },
-    { line: "[~/notes]", expectedMatch: "~/notes" },
-    { line: "dir:~/notes", expectedMatch: "~/notes" },
-    { line: "**~/notes**", expectedMatch: "~/notes" },
-    { line: "PATH=/usr/bin:~/bin", expectedMatch: "~/bin" },
-    { line: "foo/~/bar", expectedMatch: undefined },
-    { line: "https://example.com/~/foo", expectedMatch: undefined },
+test("refuses leaks next to Markdown and punctuation delimiters across all detectors and accepts non-leaks", () => {
+  type DelimiterCase = readonly [
+    line: string,
+    expected: readonly (readonly [ShippedContentFinding["kind"], string])[],
+  ];
+
+  const cases: readonly DelimiterCase[] = [
+    ["<~/notes>", [["home-path", "~/notes"]]],
+    ["[~/notes]", [["home-path", "~/notes"]]],
+    ["dir:~/notes", [["home-path", "~/notes"]]],
+    ["**~/notes**", [["home-path", "~/notes"]]],
+    ["PATH=/usr/bin:~/bin", [["home-path", "~/bin"]]],
+    ["_~/notes_", [["home-path", "~/notes"]]],
+    ["__~/notes__", [["home-path", "~/notes"]]],
+    ["~~~/notes~~", [["home-path", "~/notes"]]],
+    ["\\~/notes", [["home-path", "~/notes"]]],
+    ["_someone@gmail.com_", [["email", "someone@gmail.com"]]],
+    ["__someone@gmail.com__", [["email", "someone@gmail.com"]]],
+    ["someone@gmail.com_extra", [["email", "someone@gmail.com"]]],
+    ["_Ada_", [["author-name", "Ada"]]],
+    ["__Ada__", [["author-name", "Ada"]]],
+    [
+      "Ada_Lovelace",
+      [
+        ["author-name", "Ada"],
+        ["author-name", "Lovelace"],
+      ],
+    ],
+    ["foo/~/bar", []],
+    ["https://example.com/~/foo", []],
+    ["a@example.com", []],
+    ["Adapter", []],
+    ["GitHub", []],
   ];
 
   const expectedFindings: ShippedContentFinding[] = [];
-  for (const [index, entry] of cases.entries()) {
-    if (entry.expectedMatch !== undefined) {
+  for (const [index, [, expected]] of cases.entries()) {
+    for (const [kind, match] of expected) {
       expectedFindings.push({
         file: "GLOSSARY.md",
         line: index + 1,
-        kind: "home-path",
-        match: entry.expectedMatch,
+        kind,
+        match,
       });
     }
   }
 
   withShippedFixture(
     {
-      "GLOSSARY.md": cases.map((entry) => entry.line).join("\n"),
+      "GLOSSARY.md": cases.map(([line]) => line).join("\n"),
     },
     (root) => {
-      const result = scanShippedContent(root, []);
+      const result = scanShippedContent(root, ["Ada", "Lovelace"]);
       expect(result.findings).toEqual(expectedFindings);
     },
   );
