@@ -243,6 +243,7 @@ export async function runNoteCheck(
     programs: request.programs,
     diagnostics: request.diagnostics,
     executable,
+    wikiRoot: request.wikiRoot,
     configPath,
     files: owned.files,
     rumdlVersion: versionCheck.version,
